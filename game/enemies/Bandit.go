@@ -10,12 +10,12 @@ import (
 )
 
 type Bandit struct {
-	*enemy.Enemy
+	*enemy.EnemyData
 }
 
 func NewBandit(lvl uint8, w *weapon.Weapon, a *armor.Armor) *Bandit {
 	b := &Bandit{
-		Enemy: enemy.NewEnemy(enemy.Bandito, []adventure.Item{}),
+		EnemyData: enemy.NewEnemy(enemy.Bandito, []adventure.Item{}),
 	}
 	b.EnemyName = enemy.Bandito
 	b.SetBaseStats(enemy.EnemiesBaseStats[b.EnemyName])
@@ -44,9 +44,13 @@ func NewBandit(lvl uint8, w *weapon.Weapon, a *armor.Armor) *Bandit {
 	return b
 }
 
+func (b *Bandit) GetEnemy() *enemy.EnemyData {
+	return b.EnemyData
+}
+
 func (b *Bandit) setAbilities() {
 	//Prima abilità
-	b.Enemy.SetAbilities(entity.AbilityData{
+	b.SetAbilities(entity.AbilityData{
 		Name:            "Normal attack",
 		Description:     "",
 		Unlock:          true,

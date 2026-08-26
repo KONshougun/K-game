@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"fmt"
 	"gioco/game/combat/effect"
 	"gioco/game/combat/event"
 	"gioco/game/comm/area"
@@ -10,14 +11,16 @@ import (
 	"gioco/model/stat"
 	"math"
 	"math/rand"
+	"sort"
 )
 
-type Controller interface {
-	GetAbility(Entity) int
-	GetTarget(targets []*Entity, targetCount uint8, differentTargets bool) []int
+type Entity interface {
+	GetAbility() int
+	GetTarget(targets []*EntityData, targetCount uint8, differentTargets bool) []int
+	GetEntity() *EntityData
 }
 
-type Entity struct {
+type EntityData struct {
 	Level     uint8
 	MaxLvl    uint8
 	Name      string //rimuovibile
@@ -28,8 +31,6 @@ type Entity struct {
 	Passives  []Passive
 	BaseStats stat.Stats
 	Stats     stat.Stats
-
-	Controller Controller
 
 	Effects [event.EventCount][]effect.Effect
 	Buffs   []effect.Buff
@@ -42,24 +43,23 @@ type Entity struct {
 	MaxMp float32
 }
 
-func NewEntity(c Controller, name string) *Entity {
-	e := &Entity{
-		Level:      1,
-		MaxLvl:     100,
-		Name:       name,
-		Controller: c,
-		Weapons:    make([]*weapon.Weapon, 0, 1),
+func NewEntity(name string) *EntityData {
+	e := &EntityData{
+		Level:   1,
+		MaxLvl:  100,
+		Name:    name,
+		Weapons: make([]*weapon.Weapon, 0, 1),
 	}
 	e.AddBaseEvent()
 	return e
 }
 
-func (e *Entity) SetBaseStats(s stat.Stats) {
+func (e *EntityData) SetBaseStats(s stat.Stats) {
 	e.BaseStats = s
 	e.CurrHp = s[stat.HP]
 }
 
-func (e *Entity) SetStatsOf(lvl uint8, baseStat stat.Stats) {
+func (e *EntityData) SetStatsOf(lvl uint8, baseStat stat.Stats) {
 
 	if e.MaxLvl <= 1 {
 		panic("MaxLvl must be greater than 1")
@@ -94,7 +94,7 @@ func (e *Entity) SetStatsOf(lvl uint8, baseStat stat.Stats) {
 	})
 }
 
-func (e *Entity) CalculateStats() stat.Stats {
+func (e *EntityData) CalculateStats() stat.Stats {
 	var s stat.Stats
 	e.BaseStats.ForEach(func(sn stat.StatName, f float32) {
 		s[sn] = f
@@ -119,7 +119,7 @@ func (e *Entity) CalculateStats() stat.Stats {
 	return s
 }
 
-func (e *Entity) GetEquipmentStats() (stat.Stats, stat.Stats) {
+func (e *EntityData) GetEquipmentStats() (stat.Stats, stat.Stats) {
 	var mainStats, subStats stat.Stats
 
 	if len(e.Weapons) > 0 {
@@ -157,47 +157,115 @@ func (e *Entity) GetEquipmentStats() (stat.Stats, stat.Stats) {
 	return mainStats, subStats
 }
 
-func (e *Entity) AddBaseEvent() {
-	e.AddEffect(event.StartFight, effect.FightBaseEff, effect.None, func(a ...any) any {
+func (e *EntityData) GetDamage(dmg, spDmg float32, enemyStat stat.Stats, dmgT model.DamageType) model.Damage {
+	switch dmgT {
+	case model.Pure:
+		return model.Damage{
+			DmgType: dmgT,
+			Amount:  dmg + spDmg,
+		}
+	case model.Miss:
+		return model.Damage{DmgType: dmgT, Amount: 0}
+	}
+	dmg, spDmg = e.GetCritDmg(enemyStat, dmg, spDmg, dmgT)
+	def := enemyStat[stat.DEF] - e.Stats[stat.PRF]
+	if def > 0 {
+		dmg -= def
+		if dmg < 0 {
+			dmg = 0
+		}
+	} else {
+		dmg -= def * 1.25
+	}
+	spDef := enemyStat[stat.SP_DEF] - e.Stats[stat.SP_PRF]
+	if spDef > 0 {
+		spDmg -= spDef
+		if spDmg < 0 {
+			spDmg = 0
+		}
+	} else {
+		spDmg -= spDef * 1.25
+	}
+	return model.Damage{
+		DmgType: dmgT,
+		Amount:  dmg + spDmg,
+	}
+}
+
+func (e *EntityData) AddBaseEvent() {
+	e.AddEffect(event.StartFight, effect.FightBaseEff, effect.None, effect.Normal, func(a ...any) any {
 		e.AbilitiesCdReset()
 		e.Stats = e.CalculateStats()
 		return nil
 	})
-	e.AddEffect(event.StartTurn, effect.FightBaseEff, effect.None, func(a ...any) any {
+	e.AddEffect(event.StartTurn, effect.FightBaseEff, effect.None, effect.Normal, func(a ...any) any {
 		e.RestoreEnergy()
 		e.AbilityCdReduction()
 		e.BuffCdReduction()
 		return nil
 	})
-
-	e.AddEffect(event.EndTurn, effect.FightBaseEff, effect.None, func(a ...any) any {
-		e.AbilityCdReduction()
-		e.BuffCdReduction()
-		return nil
-	})
-	e.AddEffect(event.CastAbility, effect.FightBaseEff, effect.None, func(a ...any) any {
-		v, ok := e.eventHandler(event.CastAbility, a...)[0].(int)
+	e.AddEffect(event.CastAbility, effect.FightBaseEff, effect.None, effect.Normal, func(a ...any) any {
+		v, ok := a[0].(int)
 		if !ok {
 			panic("Ammazzati grazie")
 		}
 		e.Abilities[v].CastAbility(&e.Stats)
 		return nil
 	})
-	e.AddEffect(event.EndTurn, effect.QtrEff, effect.None, func(a ...any) any {
+	e.AddEffect(event.EndTurn, effect.QtrEff, effect.None, effect.Normal, func(a ...any) any {
 		return e.QtrActivasion()
 	})
-	e.AddEffect(event.Died, effect.Revive, effect.Before, func(a ...any) any {
+	e.AddEffect(event.Died, effect.ReviveEff, effect.Before, effect.Normal, func(a ...any) any {
 		resRate := float32(rand.Intn(100))
 		return resRate < e.Stats[stat.RES]
 	})
 }
-func (e *Entity) AddEffect(ev event.EventType, ef effect.IdEffect, trg effect.TriggerTiming, f func(a ...any) any) {
-	e.Effects[ev] = append(e.Effects[ev], effect.NewEffect(ef, ev, trg, f))
+func (e *EntityData) AddEffect(ev event.EventType, ef effect.IdEffect, trg effect.TriggerTiming, priority effect.PriorityType, f func(a ...any) any) uint16 {
+	var id uint16
+	if len(e.Effects) > 0 {
+		id = 1
+	} else {
+		id = e.Effects[ev][len(e.Effects[ev])-1].Id + 1
+	}
+	e.Effects[ev] = append(e.Effects[ev], effect.NewEffect(id, ef, ev, trg, priority, func(a ...any) any {
+		e.EventHandler(ev, a)
+		return f(a)
+	}))
+	return id
 }
-func (e *Entity) TriggerEffects(ev event.EventType, trg effect.TriggerTiming, a ...any) map[effect.IdEffect]any {
+func (e *EntityData) RemoveEffect(ev event.EventType, id uint16) {
+	for i := range e.Effects[ev] {
+		if e.Effects[ev][i].Id == id {
+			e.Effects[ev] = append(e.Effects[ev][:i], e.Effects[ev][i+1:]...)
+			return
+		}
+	}
+}
+func (e *EntityData) AddBuff(b effect.Buff, a ...any) uint16 {
+	var id uint16
+	if len(e.Buffs) > 0 {
+		id = e.Buffs[len(e.Buffs)-1].Id + 1
+	} else {
+		id = 1
+	}
+	b.Id = id
+	e.Buffs = append(e.Buffs, b)
+	e.Buffs[len(e.Buffs)-1].GetBuff(a)
+	return id
+}
+func (e *EntityData) RemoveBuff(id uint16) {
+	for i := range e.Buffs {
+		if e.Buffs[i].Id == id {
+			e.Buffs[i].RemoveBuff()
+			e.Buffs = append(e.Buffs[:i], e.Buffs[i+1:]...)
+		}
+	}
+}
+func (e *EntityData) TriggerEffects(ev event.EventType, trg effect.TriggerTiming, a ...any) map[effect.IdEffect]any {
 	foo := make(map[effect.IdEffect]any)
-	for _, ef := range e.Effects[ev] {
+	for _, ef := range e.GetEffectsOrdered(ev) {
 		if ef.Trigger == trg {
+			//	GLI EFFETTI SUCCESSIVI DOVREBBERO SAPERE COSA HANNO FATTO GLI EFFETTI PRECEDENTI
 			app := ef.Activate(a...)
 			if app != nil {
 				foo[ef.IdEff] = app
@@ -206,13 +274,22 @@ func (e *Entity) TriggerEffects(ev event.EventType, trg effect.TriggerTiming, a 
 	}
 	return foo
 }
+func (e *EntityData) GetEffectsOrdered(ev event.EventType) []effect.Effect {
+	effect := append([]effect.Effect(nil), e.Effects[ev]...)
 
-func (e *Entity) AbilitiesCdReset() {
+	sort.SliceStable(effect, func(i, j int) bool {
+		return effect[i].Priority < effect[j].Priority
+	})
+
+	return effect
+}
+
+func (e *EntityData) AbilitiesCdReset() {
 	for i := range e.Abilities {
 		e.Abilities[i].Cooldown = 0
 	}
 }
-func (e *Entity) RestoreEnergy() {
+func (e *EntityData) RestoreEnergy() {
 	e.Stats[stat.ST] += e.Stats[stat.ST_RG]
 	if e.Stats[stat.ST] > e.MaxSt {
 		e.Stats[stat.ST] = e.MaxSt
@@ -222,39 +299,44 @@ func (e *Entity) RestoreEnergy() {
 		e.Stats[stat.MP] = e.MaxMp
 	}
 }
-func (e *Entity) AbilityCdReduction() {
+func (e *EntityData) AbilityCdReduction() {
 	for i := range e.Abilities {
 		e.Abilities[i].Cooldown--
 	}
 }
-func (e *Entity) BuffCdReduction() {
+func (e *EntityData) BuffCdReduction() {
 	for i := len(e.Buffs) - 1; i >= 0; i-- {
 		if !e.Buffs[i].DecreaseDuration() {
 			e.Buffs = append(e.Buffs[:i], e.Buffs[i+1:]...)
 		}
 	}
 }
-func (e *Entity) QtrActivasion() bool {
+func (e *EntityData) QtrActivasion() bool {
 	return rand.Intn(100) < int(e.Stats[stat.QTR])
 }
 
 //FIGHT FUNCS
 
-func (e *Entity) ActiveAbility(ability int, opponents any) map[int][]model.Damage {
+func (e *EntityData) ActiveAbility(ability int, opponents any) map[int][]model.Damage {
 	e.TriggerEffects(event.CastAbility, effect.None, ability)
-	if atks, ok := e.Abilities[ability].execute.Activate(opponents).(map[int][]model.Damage); ok {
-		return atks
-	} else {
-		panic("vai cazzo")
+	result := e.Abilities[ability].execute.Activate(opponents)
+
+	atks, ok := result.(map[int][]model.Damage)
+	if !ok {
+		fmt.Printf("ability=%v\n", ability)
+		fmt.Printf("result=%#v\n", result)
+		fmt.Printf("type=%T\n", result)
+		panic(fmt.Sprintf("Activate returned %T, expected map[int][]model.Damage", result))
 	}
+
+	return atks
 }
 
-func (e *Entity) HasHit(defenderStat stat.Stats, abilityAcc float32) bool {
+func (e *EntityData) HasHit(defenderStat stat.Stats, abilityAcc float32) bool {
 	return rand.Intn(100) < int(e.Stats[stat.ACC]+abilityAcc-defenderStat[stat.EVA])
 }
 
-// 0 = NO CRIT 1 = NORMAL CRIT 2 = SUPER CRIT
-func (e *Entity) HasCritted() model.DamageType {
+func (e *EntityData) HasCritted() model.DamageType {
 	rate := float32(rand.Intn(100))
 	if rate < e.Stats[stat.CRIT_RATE] {
 		if rate*2.5 < e.Stats[stat.CRIT_RATE] {
@@ -266,172 +348,151 @@ func (e *Entity) HasCritted() model.DamageType {
 	return model.Flat
 }
 
-func (e *Entity) GetCritDmg(defenderStat stat.Stats, dmg float32, critType model.DamageType) float32 {
+func (e *EntityData) GetCritDmg(defenderStat stat.Stats, dmg, spDmg float32, critType model.DamageType) (float32, float32) {
 	if defenderStat[stat.CRIT_RES] >= 100 {
 		panic("COGLIONE")
 	}
 	switch critType {
 	case model.Flat:
-		return dmg
+		return dmg, spDmg
 	case model.Crit:
-		return dmg * ((1 + e.Stats[stat.CRIT_DMG]/100) * (1 - defenderStat[stat.CRIT_RES]/100))
+		return dmg * ((1 + e.Stats[stat.CRIT_DMG]/100) * (1 - defenderStat[stat.CRIT_RES]/100)), spDmg * ((1 + e.Stats[stat.CRIT_DMG]/100) * (1 - defenderStat[stat.CRIT_RES]/100))
 	case model.SuperCrit:
-		return dmg * ((1 + e.Stats[stat.CRIT_DMG]/100) * 1.5 * (1 - defenderStat[stat.CRIT_RES]/100))
+		return dmg * ((1 + e.Stats[stat.CRIT_DMG]/100) * 1.5 * (1 - defenderStat[stat.CRIT_RES]/100)), spDmg * ((1 + e.Stats[stat.CRIT_DMG]/100) * 1.5 * (1 - defenderStat[stat.CRIT_RES]/100))
 	default:
 		panic("get out")
 	}
 }
 
-func (e *Entity) eventHandler(ev event.EventType, a ...any) []any {
+func (e *EntityData) EventHandler(ev event.EventType, a ...any) {
 	switch ev {
 	case event.StartFight:
-		team, ok := a[0].([]*Entity)
+		_, ok := a[0].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		opponentTeam, ok := a[1].([]*Entity)
+		_, ok = a[1].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		area, ok := a[2].(area.AreaId)
+		_, ok = a[2].(area.AreaId)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		return []any{team, opponentTeam, area}
 	case event.EndFight:
-		team, ok := a[0].([]*Entity)
+		_, ok := a[0].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		return []any{team}
 	case event.StartTurn, event.EndTurn, event.QtrTrigged:
-		team, ok := a[0].([]*Entity)
+		_, ok := a[0].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		opponentTeam, ok := a[1].([]*Entity)
+		_, ok = a[1].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		return []any{team, opponentTeam}
 
 	case event.CastAbility:
-		iAbility, ok := a[0].(int)
+		_, ok := a[0].(int)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		return []any{iAbility}
 	case event.DamageDealt, event.DamageTaken:
-		team, ok := a[0].([]*Entity)
+		_, ok := a[0].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		opponentTeam, ok := a[1].([]*Entity)
-		if !ok {
-			panic("Daje roma cazzo")
-		}
-
-		actor, ok := a[2].(int)
+		_, ok = a[1].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
 
-		dmg, ok := a[3].(float32)
+		_, ok = a[2].(int)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		dmgType, ok := a[4].(model.DamageType)
+
+		_, ok = a[3].(float32)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		dmgDealt, ok := a[5].(bool)
+		_, ok = a[4].(model.DamageType)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		return []any{team, opponentTeam, actor, dmg, dmgType, dmgDealt}
+		_, ok = a[5].(bool)
+		if !ok {
+			panic("Daje roma cazzo")
+		}
 	case event.HealDealt, event.HealDTaken:
-		team, ok := a[0].([]*Entity)
+		_, ok := a[0].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		opponentTeam, ok := a[1].([]*Entity)
+		_, ok = a[1].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		actor, ok := a[2].(Entity)
+		_, ok = a[2].(int)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		healAmount, ok := a[3].(float32)
+		_, ok = a[3].(float32)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		healType, ok := a[4].(model.HealType)
+		_, ok = a[4].(model.HealType)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		return []any{team, opponentTeam, actor, healAmount, healType}
 	case event.BuffApplied, event.BuffExpired:
-		team, ok := a[0].([]*Entity)
+		_, ok := a[0].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		opponentTeam, ok := a[1].([]*Entity)
+		_, ok = a[1].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		buffer, ok := a[2].(*Entity)
+		_, ok = a[2].(*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		isBuff, ok := a[3].(bool)
+		_, ok = a[3].(bool)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		return []any{team, opponentTeam, buffer, isBuff}
 	case event.Died:
-		team, ok := a[0].([]*Entity)
+		_, ok := a[0].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		opponentTeam, ok := a[1].([]*Entity)
+		_, ok = a[1].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		attacker, ok := a[2].(*Entity)
+		_, ok = a[2].(*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		dmgAmount, ok := a[3].(float32)
+		_, ok = a[3].(float32)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		return []any{team, opponentTeam, attacker, dmgAmount}
 	case event.EnergyRecovered, event.EnergySpent:
-		team, ok := a[0].([]*Entity)
+		_, ok := a[0].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		opponentTeam, ok := a[1].([]*Entity)
+		_, ok = a[1].([]*EntityData)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		amount, ok := a[2].(float32)
+		_, ok = a[2].(float32)
 		if !ok {
 			panic("Daje roma cazzo")
 		}
-		return []any{team, opponentTeam, amount}
-	default:
-		panic("fatti i cazzi tuoi")
 	}
 }
-
-/*
-type DamageEvent struct {
-	Source     *entity.Entity
-	Target     *entity.Entity
-	Amount     float32
-	DamageType DamageType
-	IsCritical bool
-	IsDodged   bool
-}*/

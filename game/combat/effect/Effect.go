@@ -10,38 +10,52 @@ const (
 	AbilityEff
 	PassiveEff
 	SetEff
+	GetAbilityEff
 	QtrEff
-	Revive
+	ReviveEff
 
 	IdEffCount
 )
 
 type Effect struct {
+	Id       uint16
 	IdEff    IdEffect
 	Event    event.EventType
 	Trigger  TriggerTiming
+	Priority PriorityType
 	Activate func(a ...any) any
 }
 
-func NewEffect(id IdEffect, e event.EventType, trg TriggerTiming, f func(a ...any) any) Effect {
+type PriorityType uint8
+
+const (
+	Slow PriorityType = iota
+	Normal
+	Fast
+	ExtremeFast
+)
+
+func NewEffect(id uint16, idEff IdEffect, e event.EventType, trg TriggerTiming, priority PriorityType, f func(a ...any) any) Effect {
+
 	return Effect{
-		IdEff:    id,
+		Id:       id,
+		IdEff:    idEff,
 		Event:    e,
 		Trigger:  trg,
-		Activate: f,
+		Priority: priority,
+		Activate: func(a ...any) any {
+			idEff.HandleEffect(a)
+			return f(a)
+		},
 	}
 }
 
-func (idEff IdEffect)HandleEffect(value any)any{
-	switch idEff{
+func (idEff IdEffect) HandleEffect(value any) {
+	switch idEff {
 	case QtrEff:
-		v, ok := value.(bool)
-		if ok{
-			return v
-		}else{
+		_, ok := value.(bool)
+		if !ok {
 			panic("cazzo è possibile")
 		}
-	default:
-		panic("daje roma dajeeeee")
 	}
 }

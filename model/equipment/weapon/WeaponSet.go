@@ -1,7 +1,7 @@
 package weapon
 
 import (
-	"gioco/game/combat/effect"
+	effect "gioco/game/combat/effect"
 	"gioco/game/combat/event"
 	"gioco/model/stat"
 )
@@ -66,7 +66,7 @@ var WeaponStats = [SetCount]WeaponData{
 	LunaInsanguinata: {
 		Rarity:    4,
 		EffectStr: []string{"DA PENSARE.... (magari qualcosa col crit (niente di sbroccato grazie))"},
-		Effect: []effect.Effect{effect.NewEffect(effect.SetEff, event.Equipment, /*IDK*/ effect.After, func(a ...any) any {
+		Effect: []effect.Effect{effect.NewEffect(0, effect.SetEff, event.Equipment, effect.After, effect.Normal, func(a ...any) any {
 			//DA PENSARE.... (magari qualcosa col crit (niente di sbroccato grazie))
 			return nil
 		})},

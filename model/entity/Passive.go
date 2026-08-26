@@ -11,10 +11,10 @@ type Passive struct {
 	Description string
 }
 
-func NewPassive(unlock bool, description string, activasionType event.EventType, trg effect.TriggerTiming, f func(a ...any) any) Passive {
+func NewPassive(unlock bool, description string, ev event.EventType, trg effect.TriggerTiming, prio effect.PriorityType, f func(a ...any) any) Passive {
 	return Passive{
 		Unlock:      unlock,
 		Description: description,
-		Effect:      effect.NewEffect(effect.PassiveEff, activasionType, trg, f),
+		Effect:      effect.NewEffect(0, effect.PassiveEff, ev, trg, prio, f),
 	}
 }

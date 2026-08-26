@@ -21,14 +21,14 @@ type AbilityData struct {
 	DifferentTargets bool
 
 	CooldownCost  int8
-	StCost        uint8
+	StCost        float32
 	StCostPercent uint8
-	MpCost        uint8
+	MpCost        float32
 	MpCostPercent uint8
 	SpdCost       uint16
 
-	AtkMultiplier   uint8
-	SpAtkMultiplier uint8
+	AtkMultiplier   float32
+	SpAtkMultiplier float32
 	Acc             uint8
 }
 
@@ -38,11 +38,11 @@ func NewAbility(ad AbilityData) Ability {
 	}
 }
 func (a *Ability) SetAbility(f func(a ...any) any) {
-	a.execute = effect.NewEffect(effect.AbilityEff, event.CastAbility, effect.None, f)
+	a.execute = effect.NewEffect(0, effect.AbilityEff, event.CastAbility, effect.None, effect.Normal, f)
 }
 
 func (a *Ability) CastAbility(stats *stat.Stats) {
-	stats[stat.SPD] -= float32(a.SpdCost)
+	stats[stat.SPD] -= float32(a.SpdCost) - stats[stat.ATK_SPD]
 	stats[stat.ST] *= (100 - float32(a.StCostPercent)) / 100
 	stats[stat.ST] -= float32(a.StCost)
 	stats[stat.MP] *= (100 - float32(a.MpCostPercent)) / 100
@@ -50,7 +50,7 @@ func (a *Ability) CastAbility(stats *stat.Stats) {
 	a.Cooldown = a.CooldownCost
 }
 
-func (a Ability) IsUsable(e Entity) bool {
+func (a *Ability) IsUsable(e *EntityData) bool {
 	if !a.Unlock || a.Cooldown >= 0 ||
 		e.Stats[stat.ST] < float32(a.StCost)+e.Stats[stat.ST]*float32(a.StCostPercent)/100 ||
 		e.Stats[stat.MP] < float32(a.MpCost)+e.Stats[stat.MP]*float32(a.MpCostPercent)/100 {

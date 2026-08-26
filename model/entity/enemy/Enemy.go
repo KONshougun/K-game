@@ -24,17 +24,20 @@ type ItemDrop struct {
 	Amount uint16
 }
 
-type Enemy struct {
-	*entity.Entity
+type Enemy interface {
+	GetEnemy() *EnemyData
+}
+type EnemyData struct {
+	*entity.EntityData
 	EnemyName
 	Name      EnemyName
 	dropItems []adventure.Item
 }
 
-func NewEnemy(name EnemyName, dropItems []adventure.Item) *Enemy {
-	e := &Enemy{
-		Entity:    entity.NewEntity(Controller{}, name.String()),
-		dropItems: dropItems,
+func NewEnemy(name EnemyName, dropItems []adventure.Item) *EnemyData {
+	e := &EnemyData{
+		EntityData: entity.NewEntity(name.String()),
+		dropItems:  dropItems,
 	}
 	e.EnemyName = name
 	e.Class = append(e.Class, entity.Enemy)
@@ -43,18 +46,19 @@ func NewEnemy(name EnemyName, dropItems []adventure.Item) *Enemy {
 	return e
 }
 
-type Controller struct{}
-
-func (Controller) GetAbility(e entity.Entity) int {
+func (c *EnemyData) GetEntity() *entity.EntityData {
+	return c.EntityData
+}
+func (e *EnemyData) GetAbility() int {
 
 	for i, v := range slices.Backward(e.Abilities) {
-		if v.IsUsable(e) {
+		if v.IsUsable(e.GetEntity()) {
 			return i
 		}
 	}
 	return -1
 }
-func (Controller) GetTarget(targets []*entity.Entity, targetCount uint8, differentTargets bool) []int {
+func (e *EnemyData) GetTarget(targets []*entity.EntityData, targetCount uint8, differentTargets bool) []int {
 	t := make([]int, targetCount)
 	for len(t) != int(targetCount) {
 	newNum:
@@ -95,7 +99,7 @@ func (Controller) GetTarget(targets []*entity.Entity, targetCount uint8, differe
 	}
 	return t
 }
-func (e *Enemy) SetAbilities(ad entity.AbilityData) {
+func (e *EnemyData) SetAbilities(ad entity.AbilityData) {
 	//e.Abilities = append(e.Abilities, entity.NewAbility(ad))
 	e.Abilities[0].AbilityData = ad
 	e.Abilities[0].SetAbility(func(a ...any) any {
@@ -103,11 +107,11 @@ func (e *Enemy) SetAbilities(ad entity.AbilityData) {
 		if len(a) != 1 {
 			panic("fk urself")
 		}
-		opponentTeam, ok := a[0].([]*entity.Entity)
+		opponentTeam, ok := a[0].([]*entity.EntityData)
 		if !ok {
 			panic("fk me")
 		}
-		targets := e.Controller.GetTarget(opponentTeam, ad.TargetCount, ad.DifferentTargets)
+		targets := e.GetTarget(opponentTeam, ad.TargetCount, ad.DifferentTargets)
 
 		attacks := make(map[int][]model.Damage, len(targets))
 		for _, t := range targets {
@@ -116,50 +120,21 @@ func (e *Enemy) SetAbilities(ad entity.AbilityData) {
 				continue
 			}
 
-			var dmg, spDmg float32
+			dmg := e.Stats[stat.ATK] * ad.AtkMultiplier
+			spDmg := e.Stats[stat.SP_ATK] * ad.SpAtkMultiplier
 			dmgType := e.HasCritted()
-			//PSY DMG
-			if ad.AtkMultiplier > 0 {
-				dmg = e.Stats[stat.ATK] * float32(ad.AtkMultiplier)
-				dmg = e.GetCritDmg(opponentTeam[t].Stats, dmg, dmgType)
 
-				def := opponentTeam[t].Stats[stat.DEF] - e.Stats[stat.PRF]
-				if def > 0 {
-					dmg -= def
-					if dmg < 0 {
-						dmg = 0
-					}
-				} else {
-					dmg -= def * 1.25
-				}
-			}
-
-			//SP DMG
-			if ad.SpAtkMultiplier > 0 {
-				spDmg = e.Stats[stat.SP_ATK] * float32(ad.SpAtkMultiplier)
-				spDmg = e.GetCritDmg(opponentTeam[t].Stats, spDmg, dmgType)
-
-				spDef := opponentTeam[t].Stats[stat.SP_DEF] - e.Stats[stat.SP_PRF]
-				if spDef > 0 {
-					spDmg -= spDef
-					if spDmg < 0 {
-						spDmg = 0
-					}
-				} else {
-					spDmg -= spDef * 1.25
-				}
-			}
-			attacks[t] = append(attacks[t], model.Damage{DmgType: dmgType, Amount: dmg + spDmg})
+			attacks[t] = append(attacks[t], e.GetDamage(dmg, spDmg,opponentTeam[t].Stats,dmgType))
 		}
 		return attacks
 	})
 }
 
-func (e *Enemy) SetLevel(lvl uint8) {
+func (e *EnemyData) SetLevel(lvl uint8) {
 	e.Level = lvl
 	e.SetStatsOf(lvl, EnemiesBaseStats[e.EnemyName])
 }
-func (e *Enemy) SetArmor(sets []armor.ArmorSet) {
+func (e *EnemyData) SetArmor(sets []armor.ArmorSet) {
 	if e.Level > 10 {
 		for i := range int(armor.TypeCount) {
 
@@ -173,7 +148,7 @@ func (e *Enemy) SetArmor(sets []armor.ArmorSet) {
 }
 
 // TODO	IN FUTURO CREARE UN PACKAGE CHE SI OCCUPA DEL DROPPING DI TUTTO
-func (e Enemy) Reward() Reward {
+func (e EnemyData) Reward() Reward {
 
 	r := Reward{
 		Xp:   uint16(50 * e.Level),

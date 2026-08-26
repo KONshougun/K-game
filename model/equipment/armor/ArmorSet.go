@@ -38,12 +38,12 @@ type ArmorData struct {
 var ArmorEffects = [SetCount]ArmorData{
 	Ferro: {
 		[2]effect.Effect{
-			0: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			0: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.ATK] += 20
 				return nil
 			}),
-			1: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			1: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.HP] += 20
 				subStats[stat.DEF] += 16
@@ -54,12 +54,12 @@ var ArmorEffects = [SetCount]ArmorData{
 	},
 	Lupo: {
 		[2]effect.Effect{
-			0: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			0: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.ST] += 25
 				return nil
 			}),
-			1: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			1: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.ATK] += 15
 				subStats[stat.SPD] += 20
@@ -70,12 +70,12 @@ var ArmorEffects = [SetCount]ArmorData{
 	},
 	Ossa: {
 		[2]effect.Effect{
-			0: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			0: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.DEF] += 10
 				return nil
 			}),
-			1: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			1: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.ATK] += 20
 				subStats[stat.HP] += 25
@@ -86,12 +86,12 @@ var ArmorEffects = [SetCount]ArmorData{
 	},
 	Scaglie: {
 		[2]effect.Effect{
-			0: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			0: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.MP] += 25
 				return nil
 			}),
-			1: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			1: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.SP_ATK] += 20
 				subStats[stat.DEF] += 20
@@ -102,13 +102,13 @@ var ArmorEffects = [SetCount]ArmorData{
 	},
 	Ketos: {
 		[2]effect.Effect{
-			0: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			0: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.HP] += 50
 				subStats[stat.SPD] += 100
 				return nil
 			}),
-			1: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			1: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.DEF] += 25
 				subStats[stat.SP_DEF] += 25
@@ -120,13 +120,13 @@ var ArmorEffects = [SetCount]ArmorData{
 	},
 	Fenice: {
 		[2]effect.Effect{
-			0: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			0: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.DEF] += 20
 				subStats[stat.MP] += 30
 				return nil
 			}),
-			1: effect.NewEffect(effect.SetEff, event.Equipment, effect.None, func(a ...any) any {
+			1: effect.NewEffect(0, effect.SetEff, event.Equipment, effect.None, effect.Normal, func(a ...any) any {
 				subStats := a[1].(*stat.Stats)
 				subStats[stat.SP_PRF] += 7
 				subStats[stat.SP_ATK] += 25

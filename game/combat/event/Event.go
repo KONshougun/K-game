@@ -2,6 +2,11 @@ package event
 
 type EventType byte
 
+/*type EventData interface {
+	EventType() EventType
+	EventReturnData()
+}*/
+
 const (
 	StartFight EventType = iota
 	EndFight
