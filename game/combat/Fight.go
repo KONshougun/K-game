@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gioco/game/combat/effect"
 	"gioco/game/combat/event"
+	"gioco/game/combat/handler"
 	"gioco/game/comm"
 	"gioco/game/comm/area"
 	"gioco/model"
@@ -15,153 +16,229 @@ import (
 	"slices"
 )
 
-func Fight(pg []character.Character, opponents []enemy.Enemy, area area.Area) {
+func InitBattle(characters []character.Character, enemies []enemy.Enemy) {
 
-	team := make([]entity.Entity, len(pg))
-	for i := range pg {
-		team[i] = pg[i].GetCharacter()
+	team := make([]*entity.EntityData, len(characters))
+	for i := range characters {
+		team[i] = characters[i].GetCharacter().GetEntity()
+		team[i].TriggerEffects(event.SetEntityData, effect.None, &handler.SetEntityData{
+			FlatStats:    stat.Stats{},
+			PercentStats: stat.Stats{},
+		})
 	}
-	opponentTeam := make([]entity.Entity, len(opponents))
-	for i := range opponents {
-		opponentTeam[i] = opponents[i].GetEnemy()
+	opponents := make([]*entity.EntityData, len(enemies))
+	for i := range enemies {
+		opponents[i] = enemies[i].GetEnemy().GetEntity()
+		opponents[i].TriggerEffects(event.SetEntityData, effect.None, &handler.SetEntityData{
+			FlatStats:    stat.Stats{},
+			PercentStats: stat.Stats{},
+		})
 	}
 
-	triggerEvent(event.StartFight, team, opponentTeam, area, effect.None)
+	Fight(team, opponents, area.Area{Id: area.Plains})
+}
 
-	for len(team) > 0 && len(opponentTeam) > 0 {
-		index, isTeam := getFasterEntity(team, opponentTeam)
+func Fight(team, opponents []*entity.EntityData, area area.Area) {
+
+	triggerEvent(event.StartFight, team, opponents, area, effect.None, &handler.StartFight{
+		Team:      team,
+		Opponents: opponents,
+		Area:      area.Id,
+	})
+
+	for len(team) > 0 && len(opponents) > 0 {
+		index, isTeam := getFasterEntity(team, opponents)
 		if isTeam {
-			opponentTeam = attack(team, index, opponentTeam)
+			team, opponents = attack(team, opponents, area, index)
 		} else {
-			team = attack(opponentTeam, index, team)
+			team, opponents = attack(opponents, team, area, index)
 		}
 	}
 
 	if len(team) > 0 {
-		triggerEvent(event.EndFight, team, opponentTeam, area, effect.None)
+		triggerEvent(event.EndFight, team, opponents, area, effect.None, &handler.EndFight{
+			Team: team,
+			Area: area.Id,
+		})
 	} else {
 		panic("YOU LOOSE!!!")
 	}
 }
-func attack(team []entity.Entity, actor int, opponents []entity.Entity) []entity.Entity {
+func attack(team, opponents []*entity.EntityData, area area.Area, actorIdx int) ([]*entity.EntityData, []*entity.EntityData) {
 
-	teamData := make([]*entity.EntityData, len(team))
-	for i := range team {
-		teamData[i] = team[i].GetEntity()
-	}
-	opponentsData := make([]*entity.EntityData, len(opponents))
-	for i := range opponents {
-		opponentsData[i] = opponents[i].GetEntity()
-	}
-	fmt.Println(comm.Cyan.Write(teamData[actor].Name) + " sta attaccando:")
+	actor := team[actorIdx]
+	fmt.Println(comm.Cyan.Write(actor.Name) + " sta attaccando:")
 
-	teamData[actor].TriggerEffects(event.StartTurn, effect.None, team, opponents)
+	actor.TriggerEffects(event.StartTurn, effect.None, &handler.StartTurn{
+		Team:      team,
+		Opponents: opponents,
+		Area:      area.Id,
+	})
 
 qtrTrigged:
-	iAbility := team[actor].GetAbility()
-	fmt.Printf("iAbility: %v\n", iAbility)
-	if iAbility == -1 {
-		fmt.Println(comm.BrightYellow.Write(teamData[actor].Name) + " non ha abbastanza energia per utilizzare nessuna abilità")
+	targets := make(map[int][]model.Damage)
+	idxAbility := 0
+	targets, idxAbility = actor.Attack(actor, opponents)
 
-		teamData[actor].Stats[stat.ST] *= 1.30
-		if teamData[actor].Stats[stat.ST] > teamData[actor].MaxSt {
-			teamData[actor].Stats[stat.ST] = teamData[actor].MaxSt
-		}
-		teamData[actor].Stats[stat.MP] *= 1.30
-		if teamData[actor].Stats[stat.MP] > teamData[actor].MaxMp {
-			teamData[actor].Stats[stat.MP] = teamData[actor].MaxMp
-		}
-		teamData[actor].Stats[stat.SPD] += 500 
+	if idxAbility == -1 {
+		fmt.Println(comm.BrightYellow.Write(actor.Name) + " non ha abbastanza energia per utilizzare nessuna abilità")
 
-		eff := teamData[actor].TriggerEffects(event.EndTurn, effect.None, team, opponents)
-		for ef, value := range eff {
-			if ef == effect.QtrEff {
-				if value.(bool) && len(opponents) > 0 {
-					fmt.Println(comm.Cyan.Write(teamData[actor].Name) + " ha attivato il QTR!!")
-					teamData[actor].TriggerEffects(event.QtrTrigged, effect.None, team, opponents)
-					goto qtrTrigged
-				}
-			}
+		actor.Stats[stat.ST] *= 1.30
+		if actor.Stats[stat.ST] > actor.MaxSt {
+			actor.Stats[stat.ST] = actor.MaxSt
 		}
-		return opponents
+		actor.Stats[stat.MP] *= 1.30
+		if actor.Stats[stat.MP] > actor.MaxMp {
+			actor.Stats[stat.MP] = actor.MaxMp
+		}
+		actor.Stats[stat.SPD] -= 500 + actor.Stats[stat.ATK_SPD]
 	}
-	targets := teamData[actor].ActiveAbility(iAbility, opponentsData)
 
 	for i := range targets {
 		for j := range targets[i] {
-			teamData[actor].TriggerEffects(event.DamageDealt, effect.Before, team, opponents, actor, targets[i][j], targets[i][j].DmgType)
-			opponentsData[actor].TriggerEffects(event.DamageTaken, effect.Before, opponents, team, actor, targets[i][j], targets[i][j].DmgType)
+			actor.TriggerEffects(event.DamageDealt, effect.Before, &handler.DamageDealt{
+				Team:      team,
+				Opponents: opponents,
+				Area:      area.Id,
+				Target:    opponents[i],
+				Amount:    targets[i][j].Amount,
+				DmgType:   targets[i][j].DmgType,
+			})
+			opponents[i].TriggerEffects(event.DamageTaken, effect.Before, &handler.DamageTaken{
+				Team:      team,
+				Opponents: opponents,
+				Area:      area.Id,
+				Actor:     actor,
+				Amount:    targets[i][j].Amount,
+				DmgType:   targets[i][j].DmgType,
+			})
 
 			switch targets[i][j].DmgType {
+			case model.Flat:
+				fmt.Print("")
 			case model.Crit:
-				fmt.Println(comm.BrightBlue.Write(teamData[actor].Name) + " ha fatto un danno critico!")
+				fmt.Println(comm.BrightBlue.Write(actor.Name) + " ha fatto un danno critico!")
 			case model.SuperCrit:
-				fmt.Println(comm.BrightBlue.Write(teamData[actor].Name) + " ha fatto un danno super critico!!")
+				fmt.Println(comm.BrightBlue.Write(actor.Name) + " ha fatto un danno super critico!!")
+			case model.Pure:
+				fmt.Println(comm.BrightBlue.Write(actor.Name) + " ha fatto danni puri!!")
 			case model.Miss:
-				fmt.Println(comm.BrightBlue.Write(teamData[actor].Name) + " ha mancato l'attacco")
+				fmt.Println(comm.BrightBlue.Write(actor.Name) + " ha mancato l'attacco")
+			default:
+				fmt.Printf("targets[i][j].DmgType: %v\n", targets[i][j].DmgType)
+				panic("sega")
 			}
-			opponentsData[actor].Stats[stat.HP] -= targets[i][j].Amount
+			opponents[i].Stats[stat.HP] -= targets[i][j].Amount
 
-			fmt.Printf(comm.Cyan.Write(teamData[actor].Name)+" ha inflitto %v a "+opponentsData[actor].Name+"\n", targets[i][j].Amount)
+			fmt.Printf(comm.Cyan.Write(actor.Name)+" ha inflitto %v a "+opponents[i].Name+"\n", targets[i][j].Amount)
 
-			teamData[actor].TriggerEffects(event.DamageDealt, effect.After, team, opponents, actor, targets[i][j], targets[i][j].DmgType)
-			if opponentsData[actor].Stats[stat.HP] <= 0 {
+			actor.TriggerEffects(event.DamageDealt, effect.After, &handler.DamageDealt{
+				Team:      team,
+				Opponents: opponents,
+				Area:      area.Id,
+				Target:    opponents[i],
+				Amount:    targets[i][j].Amount,
+				DmgType:   targets[i][j].DmgType,
+			})
+			if opponents[i].Stats[stat.HP] <= 0 {
 				break
 			}
-			opponentsData[actor].TriggerEffects(event.DamageTaken, effect.After, opponents, team, actor, targets[i][j], targets[i][j].DmgType)
+			opponents[i].TriggerEffects(event.DamageTaken, effect.After, &handler.DamageTaken{
+				Team:      team,
+				Opponents: opponents,
+				Area:      area.Id,
+				Actor:     actor,
+				Amount:    targets[i][j].Amount,
+				DmgType:   targets[i][j].DmgType,
+			})
 		}
 	}
+	//Controllo se ci sono stati morti
 	app := 0
 	for i := range slices.Sorted(maps.Keys(targets)) {
-		if opponentsData[i-app].Stats[stat.HP] <= 0 {
-			effs := opponentsData[i-app].TriggerEffects(event.Died, effect.Before)
-			if !effs[effect.ReviveEff].(bool) {
-				opponentsData[i-app].TriggerEffects(event.Died, effect.After)
-				fmt.Println(comm.BrightCyan.Write(opponentsData[i-app].Name) + " è stato eliminato")
-				opponents = append(opponents[:i-app], opponents[i+1-app:]...)
-				opponentsData = append(opponentsData[:i-app], opponentsData[i+1-app:]...)
-				app++
+		if opponents[i-app].Stats[stat.HP] <= 0 {
+			evt := opponents[i-app].TriggerEffects(event.Died, effect.Before, &handler.Died{
+				Team:      team,
+				Opponents: opponents,
+				Area:      area.Id,
+				Actor:     actor,
+				Amount:    targets[i][len(targets[i])-1].Amount,
+				DmgType:   targets[i][len(targets[i])-1].DmgType,
+				IsAlive:   false,
+			})
+			if !*(evt.GetData()[6].(*bool)) {
+				evt = opponents[i-app].TriggerEffects(event.Died, effect.After, &handler.Died{
+					Team:      team,
+					Opponents: opponents,
+					Area:      area.Id,
+					Actor:     actor,
+					Amount:    targets[i][len(targets[i])-1].Amount,
+					DmgType:   targets[i][len(targets[i])-1].DmgType,
+					IsAlive:   false,
+				})
+				if !*(evt.GetData()[6].(*bool)) {
+					fmt.Println(comm.BrightCyan.Write(opponents[i-app].Name) + " è stato eliminato")
+					opponents = append(opponents[:i-app], opponents[i+1-app:]...)
+					app++
+				} else {
+					fmt.Println(comm.BrightCyan.Write(opponents[i-app].Name) + " è rinato")
+					opponents[i-app].TriggerEffects(event.Revived, effect.After, &handler.Revived{
+						Team:      team,
+						Opponents: opponents,
+						Area:      area.Id,
+					})
+				}
 			} else {
-				fmt.Println(comm.BrightCyan.Write(opponentsData[i-app].Name) + " è sopravvissuto")
+				fmt.Println(comm.BrightCyan.Write(opponents[i-app].Name) + " è sopravvissuto")
+				opponents[i-app].TriggerEffects(event.Resist, effect.After, &handler.Resist{
+					Team:      team,
+					Opponents: opponents,
+					Area:      area.Id,
+				})
 			}
 		}
 	}
 
-	eff := teamData[actor].TriggerEffects(event.EndTurn, effect.None, team, opponents)
-	for ef, value := range eff {
-		if ef == effect.QtrEff {
-			if value.(bool) && len(opponents) > 0 {
-				fmt.Println(comm.Cyan.Write(teamData[actor].Name) + " ha attivato il QTR!!")
-				teamData[actor].TriggerEffects(event.QtrTrigged, effect.None, team, opponents)
-				goto qtrTrigged
-			}
-		}
+	evt := actor.TriggerEffects(event.EndTurn, effect.None, &handler.EndTurn{
+		Team:         team,
+		Opponents:    opponents,
+		Area:         area.Id,
+		QtrActivated: false,
+	})
+	if *(evt.GetData()[3].(*bool)) && len(opponents) > 0 {
+		fmt.Println(comm.Cyan.Write(actor.Name) + " ha attivato il QTR!!")
+		actor.TriggerEffects(event.QtrTrigged, effect.None, &handler.QtrTrigged{
+			Team:      team,
+			Opponents: opponents,
+			Area:      area.Id,
+		})
+		goto qtrTrigged
 	}
-	return opponents
+	return team, opponents
 }
 
-func triggerEvent(ev event.EventType, team []entity.Entity, opponentTeam []entity.Entity, area area.Area, trg effect.TriggerTiming, a ...any) {
+func triggerEvent(ev event.EventType, team []*entity.EntityData, opponentTeam []*entity.EntityData, area area.Area, trg effect.TriggerTiming, evtData event.EventData) {
 	for i := range team {
-		team[i].GetEntity().TriggerEffects(ev, trg, team, opponentTeam, area, a)
+		team[i].TriggerEffects(ev, trg, evtData)
 	}
 	for i := range opponentTeam {
-		opponentTeam[i].GetEntity().TriggerEffects(ev, trg, opponentTeam, team, area, a)
+		opponentTeam[i].TriggerEffects(ev, trg, evtData)
 	}
-	area.TriggerEffects(ev, trg, a)
+	area.TriggerEffects(ev, trg, evtData)
 }
-func getFasterEntity(team []entity.Entity, opponentTeam []entity.Entity) (int, bool) {
+func getFasterEntity(team []*entity.EntityData, opponentTeam []*entity.EntityData) (int, bool) {
 	var idEntity int
 	var maxSpd float32
 	isTeam := true
 	for i := range team {
-		if team[i].GetEntity().Stats[stat.SPD] > maxSpd {
-			maxSpd = team[i].GetEntity().Stats[stat.SPD]
+		if team[i].Stats[stat.SPD] > maxSpd {
+			maxSpd = team[i].Stats[stat.SPD]
 			idEntity = i
 		}
 	}
 	for i := range opponentTeam {
-		if opponentTeam[i].GetEntity().Stats[stat.SPD] > maxSpd {
-			maxSpd = opponentTeam[i].GetEntity().Stats[stat.SPD]
+		if opponentTeam[i].Stats[stat.SPD] > maxSpd {
+			maxSpd = opponentTeam[i].Stats[stat.SPD]
 			isTeam = false
 		}
 	}

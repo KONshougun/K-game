@@ -1,9 +1,8 @@
 package entity
 
 import (
-	"gioco/game/combat/effect"
-	"gioco/game/combat/event"
 	"gioco/game/comm"
+	"gioco/model"
 	"gioco/model/stat"
 )
 
@@ -11,7 +10,7 @@ type Ability struct {
 	AbilityData
 
 	Cooldown int8
-	execute  effect.Effect
+	Execute  func(opponents []*EntityData) map[int][]model.Damage
 }
 type AbilityData struct {
 	Name             string
@@ -32,13 +31,11 @@ type AbilityData struct {
 	Acc             uint8
 }
 
-func NewAbility(ad AbilityData) Ability {
+func NewAbility(ad AbilityData, f func(opponents []*EntityData) map[int][]model.Damage) Ability {
 	return Ability{
 		AbilityData: ad,
+		Execute:     f,
 	}
-}
-func (a *Ability) SetAbility(f func(a ...any) any) {
-	a.execute = effect.NewEffect(0, effect.AbilityEff, event.CastAbility, effect.None, effect.Normal, f)
 }
 
 func (a *Ability) CastAbility(stats *stat.Stats) {
@@ -50,13 +47,20 @@ func (a *Ability) CastAbility(stats *stat.Stats) {
 	a.Cooldown = a.CooldownCost
 }
 
-func (a *Ability) IsUsable(e *EntityData) bool {
-	if !a.Unlock || a.Cooldown >= 0 ||
-		e.Stats[stat.ST] < float32(a.StCost)+e.Stats[stat.ST]*float32(a.StCostPercent)/100 ||
-		e.Stats[stat.MP] < float32(a.MpCost)+e.Stats[stat.MP]*float32(a.MpCostPercent)/100 {
-		return false
+func (a *Ability) IsUsable(e *EntityData) (string, bool) {
+	if !a.Unlock {
+		return "Non sbloccata", false
 	}
-	return true
+	if a.Cooldown >= 0{
+		return "In ricarica", false
+	}
+	if e.Stats[stat.ST] < float32(a.StCost)+e.Stats[stat.ST]*float32(a.StCostPercent)/100 {
+		return "Stamina insufficiente", false
+	}
+	if e.Stats[stat.MP] < float32(a.MpCost)+e.Stats[stat.MP]*float32(a.MpCostPercent)/100 {
+		return "Mana insufficiente", false
+	}
+	return "", true
 }
 
 func (a Ability) String() string {

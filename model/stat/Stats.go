@@ -1,10 +1,9 @@
 package stat
 
 import (
+	"gioco/game/comm"
 	"strconv"
 	"strings"
-
-	"gioco/game/comm"
 )
 
 type Stats [StatCount]float32

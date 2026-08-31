@@ -2,19 +2,12 @@ package event
 
 type EventType byte
 
-/*type EventData interface {
-	EventType() EventType
-	EventReturnData()
-}*/
-
 const (
-	StartFight EventType = iota
+	SetEntityData EventType = iota
+	StartFight 
 	EndFight
 	StartTurn
 	EndTurn
-
-	CastAbility
-	Equipment
 
 	BuffApplied
 	BuffExpired
@@ -25,14 +18,20 @@ const (
 	QtrTrigged
 
 	HealDealt
-	HealDTaken
+	HealTaken
 
 	EnergySpent
 	EnergyRecovered
 
 	Revived
+	Resist
 	Died
 	//...
 
 	EventCount
 )
+
+type EventData interface {
+	Type() EventType
+	GetData() []any
+}

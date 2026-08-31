@@ -6,12 +6,12 @@ type Buff struct {
 	IsBuff    bool
 	Removable bool
 
-	GetBuff    func(a ...any) any
-	RemoveBuff func(a ...any) any
+	GetBuff    func() //func(a ...any) any
+	RemoveBuff func() //func(a ...any) any
 }
 
 func NewBuff(id uint16, count uint8, isBuff bool,
-	removable bool, getBuff func(a ...any) any, removeBuff func(a ...any) any) Buff {
+	removable bool, getBuff /*func(a ...any) any*/, removeBuff func() /*func(a ...any) any*/) Buff {
 	return Buff{
 		Id:         id,
 		Count:      count,

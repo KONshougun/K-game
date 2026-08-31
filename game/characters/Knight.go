@@ -33,7 +33,7 @@ func (k *Knight) GetCharacter() *character.CharacterData {
 	return k.CharacterData
 }
 func (k *Knight) setAbilities() {
-	k.Abilities[0].AbilityData = entity.AbilityData{
+	k.Abilities[0] = entity.NewAbility(entity.AbilityData{
 		Name:          "Normal attack",
 		Unlock:        true,
 		TargetCount:   1,
@@ -41,29 +41,22 @@ func (k *Knight) setAbilities() {
 		SpdCost:       500,
 		AtkMultiplier: 1,
 		Acc:           35,
-	}
-
-	k.Abilities[0].SetAbility(func(a ...any) any {
-		if len(a) != 1 {
-			panic("fk urself pt2")
-		}
-		opponentTeam := a[0].([]*entity.EntityData)
-		t := k.GetTarget(opponentTeam, k.Abilities[0].TargetCount, k.Abilities[0].DifferentTargets)[0]
+	}, func(opponents []*entity.EntityData) map[int][]model.Damage {
+		t := k.GetTarget(opponents, k.Abilities[0].TargetCount, k.Abilities[0].DifferentTargets, false)[0]
 
 		attacks := make(map[int][]model.Damage, k.Abilities[0].TargetCount)
-		if !k.HasHit(opponentTeam[t].Stats, float32(k.Abilities[0].Acc)) {
+		if !k.HasHit(opponents[t].Stats, float32(k.Abilities[0].Acc)) {
 			attacks[t] = append(attacks[t], model.Damage{DmgType: model.Miss, Amount: 0})
 			return attacks
 		}
 
-		var dmg float32
+		dmg := k.Stats[stat.ATK] * k.Abilities[0].AtkMultiplier
 		dmgType := k.HasCritted()
-		attacks[t] = append(attacks[t], k.GetDamage(dmg, 0, opponentTeam[t].Stats, dmgType))
+		attacks[t] = append(attacks[t], k.GetDamage(dmg, 0, opponents[t].Stats, dmgType))
 		return attacks
 	})
-
 	//SECONDA ABILITà
-	k.Abilities[1].AbilityData = entity.AbilityData{
+	k.Abilities[1] = entity.NewAbility(entity.AbilityData{
 		Name:          "Fendente sfiancante",
 		Description:   "Colpisce un avversario con un fendente e gli abbassa la difesa e difesa speciale",
 		Unlock:        true,
@@ -74,44 +67,36 @@ func (k *Knight) setAbilities() {
 		SpdCost:       550,
 		AtkMultiplier: 1,
 		Acc:           35,
-	}
-	k.Abilities[1].SetAbility(func(a ...any) any {
-		if len(a) != 1 {
-			panic("fk urself pt2")
-		}
-		opponentTeam := a[0].([]*entity.EntityData)
-		t := k.GetTarget(opponentTeam, k.Abilities[1].TargetCount, k.Abilities[1].DifferentTargets)[0]
+	}, func(opponents []*entity.EntityData) map[int][]model.Damage {
+		t := k.GetTarget(opponents, k.Abilities[1].TargetCount, k.Abilities[1].DifferentTargets, false)[0]
 
 		attacks := make(map[int][]model.Damage, k.Abilities[1].TargetCount)
-		if !k.HasHit(opponentTeam[t].Stats, float32(k.Abilities[1].Acc)) {
+		if !k.HasHit(opponents[t].Stats, float32(k.Abilities[1].Acc)) {
 			attacks[t] = append(attacks[t], model.Damage{DmgType: model.Miss, Amount: 0})
 			return attacks
 		}
 
-		dmg := k.Stats[stat.ATK]
+		dmg := k.Stats[stat.ATK] * k.Abilities[1].AtkMultiplier
 		dmgType := k.HasCritted()
-		attacks[t] = append(attacks[t], k.GetDamage(dmg, 0, opponentTeam[t].Stats, dmgType))
+		attacks[t] = append(attacks[t], k.GetDamage(dmg, 0, opponents[t].Stats, dmgType))
 
 		//Applico i debuff al target
-		opponentTeam[t].AddBuff(effect.Buff{
+		opponents[t].AddBuff(effect.Buff{
 			Count:  255,
 			IsBuff: false,
-			GetBuff: func(a ...any) any {
-				opponentTeam[t].Stats[stat.DEF] *= 0.95
-				opponentTeam[t].Stats[stat.SP_DEF] *= 0.95
-				return nil
+			GetBuff: func() {
+				opponents[t].Stats[stat.DEF] *= 0.95
+				opponents[t].Stats[stat.SP_DEF] *= 0.95
 			},
-			RemoveBuff: func(a ...any) any {
-				opponentTeam[t].Stats[stat.DEF] *= 1.05
-				opponentTeam[t].Stats[stat.SP_DEF] *= 1.05
-				return nil
+			RemoveBuff: func() {
+				opponents[t].Stats[stat.DEF] *= 1.05
+				opponents[t].Stats[stat.SP_DEF] *= 1.05
 			},
 		})
 		return attacks
 	})
-
 	//Terza ABILITà
-	k.Abilities[2].AbilityData = entity.AbilityData{
+	k.Abilities[2] = entity.NewAbility(entity.AbilityData{
 		Name:          "Controllo del berserk",
 		Description:   "Entra in uno stato di incoscienza per 3 turni",
 		CooldownCost:  5,
@@ -120,12 +105,11 @@ func (k *Knight) setAbilities() {
 		MpCost:        30,
 		MpCostPercent: 10,
 		SpdCost:       375,
-	}
-	k.Abilities[2].SetAbility(func(a ...any) any {
+	}, func(opponents []*entity.EntityData) map[int][]model.Damage {
 		k.AddBuff(effect.Buff{
 			Count:  3,
 			IsBuff: true,
-			GetBuff: func(a ...any) any {
+			GetBuff: func() {
 				k.berserkMode = true
 				k.Stats[stat.HP] *= 0.90
 
@@ -136,9 +120,8 @@ func (k *Knight) setAbilities() {
 
 				k.Stats[stat.DEF] *= 0.85
 				k.Stats[stat.SP_DEF] *= 0.85
-				return nil
 			},
-			RemoveBuff: func(a ...any) any {
+			RemoveBuff: func() {
 				k.berserkMode = false
 				k.Stats[stat.ATK] *= 0.80
 				k.Stats[stat.SP_ATK] *= 0.80
@@ -149,14 +132,12 @@ func (k *Knight) setAbilities() {
 				k.Stats[stat.SP_DEF] *= 1.15
 
 				k.Stats[stat.ST] *= 0.70
-				return nil
 			},
 		})
 		return map[int][]model.Damage{}
 	})
-
 	//Quarta abilità
-	k.Abilities[3].AbilityData = entity.AbilityData{
+	k.Abilities[3] = entity.NewAbility(entity.AbilityData{
 		Name:          "Excalibur",
 		Description:   "Colpisce con un fendente carico di magia",
 		CooldownCost:  6,
@@ -170,25 +151,16 @@ func (k *Knight) setAbilities() {
 		AtkMultiplier:   1.30,
 		SpAtkMultiplier: 1,
 		Acc:             40,
-	}
-	k.Abilities[3].SetAbility(func(a ...any) any {
+	}, func(opponents []*entity.EntityData) map[int][]model.Damage {
 
-		if len(a) != 1 {
-			panic("fk urself")
-		}
-		opponentTeam, ok := a[0].([]*entity.EntityData)
-		if !ok {
-			panic("fk me")
-		}
-		target := k.GetTarget(opponentTeam, k.Abilities[3].TargetCount, k.Abilities[3].DifferentTargets)[0]
+		target := k.GetTarget(opponents, k.Abilities[3].TargetCount, k.Abilities[3].DifferentTargets, false)[0]
 
 		attacks := make(map[int][]model.Damage, 3)
 		for i := target - 1; i <= target+1; i++ {
-
-			if i < 0 || i >= len(opponentTeam) {
+			if i < 0 || i >= len(opponents) {
 				continue
 			}
-			if !k.HasHit(opponentTeam[i].Stats, float32(k.Abilities[3].Acc)) {
+			if !k.HasHit(opponents[i].Stats, float32(k.Abilities[3].Acc)) {
 				attacks[i] = append(attacks[i], model.Damage{DmgType: model.Miss, Amount: 0})
 				continue
 			}
@@ -199,18 +171,21 @@ func (k *Knight) setAbilities() {
 			if i == target {
 				dmg = k.Stats[stat.ATK] * float32(k.Abilities[3].AtkMultiplier)
 			}
-			dmg, spDmg = k.GetCritDmg(opponentTeam[i].Stats, dmg, spDmg, dmgType)
 
-			attacks[i] = append(attacks[i], k.GetDamage(dmg, spDmg, opponentTeam[i].Stats, dmgType))
+			attacks[i] = append(attacks[i], k.GetDamage(dmg, spDmg, opponents[i].Stats, dmgType))
 		}
 		return attacks
 	})
 }
+
+// TODO
 func (k *Knight) setPassives() {
-	k.Passives = append(k.Passives, entity.NewPassive(false, "Aumenta attacco subendo danni", event.DamageTaken, effect.After, effect.Normal, func(a ...any) any {
-		return nil
-	}), entity.NewPassive(false, "Si cura in base al danno inflitto", event.DamageDealt, effect.After, effect.Normal, func(a ...any) any {
-		return nil
+	k.Passives = append(k.Passives, entity.NewPassive(false, "Aumenta attacco subendo danni", event.DamageTaken, effect.After, effect.Normal, func(evt event.EventData) event.EventData {
+
+		return evt
+	}), entity.NewPassive(false, "Si cura in base al danno inflitto", event.DamageDealt, effect.After, effect.Normal, func(evt event.EventData) event.EventData {
+
+		return evt
 	}))
 }
 
@@ -218,7 +193,7 @@ func (k *Knight) AwakenAbility(index int) {
 	switch index {
 	case 1:
 		k.GetCharacter().AbilityAwakened[1] = true
-		k.Abilities[1].AbilityData = entity.AbilityData{
+		k.Abilities[1] = entity.NewAbility(entity.AbilityData{
 			Name:          "Fendente sfiancante",
 			Description:   "Colpisce un avversario con un fendente e gli abbassa difesa e difesa speciale, inoltre riduce le cure ricevute per 3 turni",
 			Unlock:        true,
@@ -229,17 +204,17 @@ func (k *Knight) AwakenAbility(index int) {
 			SpdCost:       600,
 			AtkMultiplier: 1,
 			Acc:           35,
-		}
-		k.Abilities[1].SetAbility(func(a ...any) any {
-			if len(a) != 1 {
-				panic("fk urself pt2")
-			}
-			var attacks map[int][]model.Damage
-			opponentTeam := a[0].([]*entity.EntityData)
+		}, func(opponents []*entity.EntityData) map[int][]model.Damage {
+
+			targets := make([]int, 0, 3)
 			if !k.berserkMode {
-				t := k.GetTarget(opponentTeam, k.Abilities[1].TargetCount, k.Abilities[1].DifferentTargets)[0]
-				attacks := make(map[int][]model.Damage, k.Abilities[1].TargetCount)
-				if !k.HasHit(opponentTeam[t].Stats, float32(k.Abilities[1].Acc)) {
+				targets = k.GetTarget(opponents, k.Abilities[1].TargetCount, k.Abilities[1].DifferentTargets, false)
+			} else {
+				targets = k.GetTarget(opponents, 3, k.Abilities[1].DifferentTargets, true)
+			}
+			attacks := make(map[int][]model.Damage, len(targets))
+			for _, t := range targets {
+				if !k.HasHit(opponents[t].Stats, float32(k.Abilities[1].Acc)) {
 					attacks[t] = append(attacks[t], model.Damage{DmgType: model.Miss, Amount: 0})
 					return attacks
 				}
@@ -247,39 +222,32 @@ func (k *Knight) AwakenAbility(index int) {
 				dmgType := k.HasCritted()
 				//PSY DMG
 				dmg := k.Stats[stat.ATK] * k.Abilities[1].AtkMultiplier
-				dmg, _ = k.GetCritDmg(opponentTeam[t].Stats, dmg, 0, dmgType)
-				attacks[t] = append(attacks[t], k.GetDamage(dmg, 0, opponentTeam[t].Stats, dmgType))
+				attacks[t] = append(attacks[t], k.GetDamage(dmg, 0, opponents[t].Stats, dmgType))
 
 				var appIdEff uint16
 				//Applico i debuff al target
-				opponentTeam[t].AddBuff(
-					effect.NewBuff(0, 255, false, true, func(a ...any) any {
-						opponentTeam[t].Stats[stat.DEF] *= 0.95
-						opponentTeam[t].Stats[stat.SP_DEF] *= 0.95
-						appIdEff = opponentTeam[t].AddEffect(event.HealDTaken, effect.BuffEff, effect.Before, effect.Normal, func(a ...any) any {
-							opponentTeam[t].EventHandler(event.HealDTaken, a...)
-							healAmount := a[3].(float32)
-							healType := a[4].(model.HealType)
-
-							if healType == model.Heal {
-								healAmount *= 0.90
+				opponents[t].AddBuff(
+					effect.NewBuff(0, 255, false, true, func() {
+						opponents[t].Stats[stat.DEF] *= 0.95
+						opponents[t].Stats[stat.SP_DEF] *= 0.95
+						appIdEff = opponents[t].AddEffect(event.HealTaken, effect.Before, effect.Normal, func(evt event.EventData) event.EventData {
+							if *(evt.GetData()[5].(*model.HealType)) == model.Heal {
+								*(evt.GetData()[4].(*float32)) *= 0.90
 							}
-							return []any{healAmount, healType}
+							return evt
 						})
-						return nil
-					}, func(a ...any) any {
-						opponentTeam[t].Stats[stat.DEF] *= 1.05
-						opponentTeam[t].Stats[stat.SP_DEF] *= 1.05
+					}, func() {
+						opponents[t].Stats[stat.DEF] *= 1.05
+						opponents[t].Stats[stat.SP_DEF] *= 1.05
 
-						opponentTeam[t].RemoveEffect(event.HealDTaken, appIdEff)
-						return nil
+						opponents[t].RemoveEffect(event.HealTaken, appIdEff)
 					}))
 			}
 			return attacks
 		})
 	case 2:
 		k.GetCharacter().AbilityAwakened[2] = true
-		k.Abilities[2].AbilityData = entity.AbilityData{
+		k.Abilities[2] = entity.NewAbility(entity.AbilityData{
 			Name:          "Controllo del berserk",
 			Description:   "Entra in uno stato di incoscienza per 4 turni",
 			Unlock:        true,
@@ -289,14 +257,14 @@ func (k *Knight) AwakenAbility(index int) {
 			MpCost:        40,
 			MpCostPercent: 10,
 			SpdCost:       300,
-		}
-		k.Abilities[2].SetAbility(func(a ...any) any {
+		}, func(opponents []*entity.EntityData) map[int][]model.Damage {
+
 			appStCost := make([]float32, len(k.Abilities))
 			appStCostPer := make([]uint8, len(k.Abilities))
 			k.AddBuff(effect.Buff{
 				Count:  4,
 				IsBuff: true,
-				GetBuff: func(a ...any) any {
+				GetBuff: func( /*evt event.EventData*/ ) /*event.EventData*/ {
 					k.berserkMode = true
 					k.Stats[stat.HP] *= 0.90
 
@@ -314,9 +282,8 @@ func (k *Knight) AwakenAbility(index int) {
 						k.Abilities[i].StCost = 0
 						k.Abilities[i].StCostPercent = 0
 					}
-					return nil
 				},
-				RemoveBuff: func(a ...any) any {
+				RemoveBuff: func( /*evt event.EventData*/ ) /*event.EventData*/ {
 					k.berserkMode = false
 					k.Stats[stat.ATK] *= 0.75
 					k.Stats[stat.SP_ATK] *= 0.75
@@ -330,14 +297,13 @@ func (k *Knight) AwakenAbility(index int) {
 						k.Abilities[i].StCost = appStCost[i]
 						k.Abilities[i].StCostPercent = appStCostPer[i]
 					}
-					return nil
 				},
 			})
 			return map[int][]model.Damage{}
 		})
 	case 3:
 		k.GetCharacter().AbilityAwakened[3] = true
-		k.Abilities[3].AbilityData = entity.AbilityData{
+		k.Abilities[3] = entity.NewAbility(entity.AbilityData{
 			Name:          "Excalibur",
 			Description:   "Colpisce con un fendente carico di magia",
 			Unlock:        true,
@@ -352,48 +318,29 @@ func (k *Knight) AwakenAbility(index int) {
 			AtkMultiplier:   1.30,
 			SpAtkMultiplier: 1,
 			Acc:             40,
-		}
-		k.Abilities[3].SetAbility(func(a ...any) any {
-			if len(a) != 1 {
-				panic("fk urself")
-			}
-			opponentTeam, ok := a[0].([]*entity.EntityData)
-			if !ok {
-				panic("fk me")
-			}
-			target := k.GetTarget(opponentTeam, k.Abilities[3].TargetCount, k.Abilities[3].DifferentTargets)[0]
+		}, func(opponents []*entity.EntityData) map[int][]model.Damage {
+			target := k.GetTarget(opponents, k.Abilities[3].TargetCount, k.Abilities[3].DifferentTargets, false)[0]
 
-			attacks := make(map[int][]model.Damage, len(opponentTeam))
-			for i := range target {
-				if !k.HasHit(opponentTeam[i].Stats, float32(k.Abilities[3].Acc)) {
+			attacks := make(map[int][]model.Damage, len(opponents))
+			dmg := k.Stats[stat.ATK] * float32(k.Abilities[3].AtkMultiplier)
+			spDmg := k.Stats[stat.SP_ATK]*float32(k.Abilities[3].SpAtkMultiplier) + dmg
+
+			for i := range len(opponents) {
+				if !k.HasHit(opponents[i].Stats, float32(k.Abilities[3].Acc)) {
 					attacks[i] = append(attacks[i], model.Damage{DmgType: model.Miss, Amount: 0})
 					continue
 				}
 
-				dmg := k.Stats[stat.ATK] * float32(k.Abilities[3].AtkMultiplier)
-				spDmg := k.Stats[stat.SP_ATK]*float32(k.Abilities[3].SpAtkMultiplier) + dmg
 				dmgType := k.HasCritted()
-				dmg, spDmg = k.GetCritDmg(opponentTeam[i].Stats, dmg, spDmg, dmgType)
-
 				if i == target {
 					if k.berserkMode {
-						attacks[i] = append(attacks[i], k.GetDamage(dmg, spDmg, opponentTeam[i].Stats, dmgType))
-						continue
-					}
-					//PSY DMG
-					def := opponentTeam[i].Stats[stat.DEF] - k.Stats[stat.PRF]
-					if def > 0 {
-						dmg -= def
-						if dmg < 0 {
-							dmg = 0
-						}
+						attacks[i] = append(attacks[i], k.GetDamage(dmg, spDmg, opponents[i].Stats, model.Pure))
 					} else {
-						dmg -= def * 1.25
+						attacks[i] = append(attacks[i], k.GetDamage(dmg, spDmg, opponents[i].Stats, dmgType))
 					}
+				} else {
+					attacks[i] = append(attacks[i], k.GetDamage(0, spDmg, opponents[i].Stats, dmgType))
 				}
-
-				dmg = 0
-				attacks[i] = append(attacks[i], k.GetDamage(dmg, spDmg, opponentTeam[i].Stats, dmgType))
 			}
 			return attacks
 		})

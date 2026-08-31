@@ -3,6 +3,7 @@ package area
 import (
 	"gioco/game/combat/effect"
 	"gioco/game/combat/event"
+	"sort"
 )
 
 type Area struct {
@@ -24,17 +25,17 @@ const (
 	*/
 
 	//AZIONI BASE
-	Settings     AreaId = -1
-	Inventory       AreaId = 0
-	Quest            AreaId = 6
+	Settings   AreaId = -1
+	Inventory  AreaId = 0
+	Quest      AreaId = 6
 	NextIsland AreaId = 7
 
 	//PRIMA ISOLA
-	Castle AreaId = 1
-	Plains  AreaId = 2
-	Woods    AreaId = 3
+	Castle    AreaId = 1
+	Plains    AreaId = 2
+	Woods     AreaId = 3
 	Graveyard AreaId = 4
-	Beach AreaId = 5
+	Beach     AreaId = 5
 
 	//SECONDA ISOLA
 	COSTA                   AreaId = 1
@@ -44,15 +45,20 @@ const (
 	CATENA_SBBIA_INCENDIARA AreaId = 5
 )
 
-func (area Area) TriggerEffects(ev event.EventType, trg effect.TriggerTiming, a ...any) map[effect.IdEffect]any {
-	foo := make(map[effect.IdEffect]any)
-	for _, ef := range area.Effects[ev] {
+func (area Area) TriggerEffects(ev event.EventType, trg effect.TriggerTiming, evData event.EventData) event.EventData {
+	for _, ef := range area.GetEffectsOrdered(ev) {
 		if ef.Trigger == trg {
-			app := ef.Activate(a)
-			if app != nil {
-				foo[ef.IdEff] = app
-			}
+			evData = ef.Activate(evData)
 		}
 	}
-	return foo
+	return evData
+}
+func (a *Area) GetEffectsOrdered(ev event.EventType) []effect.Effect {
+	effect := append([]effect.Effect(nil), a.Effects[ev]...)
+
+	sort.SliceStable(effect, func(i, j int) bool {
+		return effect[i].Priority < effect[j].Priority
+	})
+
+	return effect
 }

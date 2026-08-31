@@ -2,9 +2,9 @@ package effect
 
 import "gioco/game/combat/event"
 
-type IdEffect byte
+//type IdEffect byte
 
-const (
+/*const (
 	FightBaseEff IdEffect = iota
 	BuffEff
 	AbilityEff
@@ -15,15 +15,14 @@ const (
 	ReviveEff
 
 	IdEffCount
-)
+)*/
 
 type Effect struct {
 	Id       uint16
-	IdEff    IdEffect
 	Event    event.EventType
 	Trigger  TriggerTiming
 	Priority PriorityType
-	Activate func(a ...any) any
+	Activate func(evData event.EventData) event.EventData
 }
 
 type PriorityType uint8
@@ -35,27 +34,18 @@ const (
 	ExtremeFast
 )
 
-func NewEffect(id uint16, idEff IdEffect, e event.EventType, trg TriggerTiming, priority PriorityType, f func(a ...any) any) Effect {
-
+func NewEffect(id uint16, e event.EventType, trg TriggerTiming, priority PriorityType, f func(evData event.EventData) event.EventData) Effect {
 	return Effect{
 		Id:       id,
-		IdEff:    idEff,
 		Event:    e,
 		Trigger:  trg,
 		Priority: priority,
-		Activate: func(a ...any) any {
-			idEff.HandleEffect(a)
-			return f(a)
+		Activate: func(evData event.EventData) event.EventData {
+			if evData.Type() == e {
+				return f(evData)
+			} else {
+				panic("siuummm")
+			}
 		},
-	}
-}
-
-func (idEff IdEffect) HandleEffect(value any) {
-	switch idEff {
-	case QtrEff:
-		_, ok := value.(bool)
-		if !ok {
-			panic("cazzo è possibile")
-		}
 	}
 }

@@ -2,7 +2,6 @@ package enemy
 
 import (
 	"gioco/game/adventure"
-	"gioco/game/comm"
 	"gioco/model"
 	"gioco/model/entity"
 	"gioco/model/equipment/armor"
@@ -11,6 +10,8 @@ import (
 	"math/rand"
 	"slices"
 )
+
+var EnemyForcedTargets []int
 
 type Reward struct {
 	Xp          uint16
@@ -27,6 +28,7 @@ type ItemDrop struct {
 type Enemy interface {
 	GetEnemy() *EnemyData
 }
+type EnemyController struct{}
 type EnemyData struct {
 	*entity.EntityData
 	EnemyName
@@ -36,7 +38,7 @@ type EnemyData struct {
 
 func NewEnemy(name EnemyName, dropItems []adventure.Item) *EnemyData {
 	e := &EnemyData{
-		EntityData: entity.NewEntity(name.String()),
+		EntityData: entity.NewEntity(name.String(), EnemyController{}),
 		dropItems:  dropItems,
 	}
 	e.EnemyName = name
@@ -49,73 +51,48 @@ func NewEnemy(name EnemyName, dropItems []adventure.Item) *EnemyData {
 func (c *EnemyData) GetEntity() *entity.EntityData {
 	return c.EntityData
 }
-func (e *EnemyData) GetAbility() int {
-
+func (controller EnemyController) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
 	for i, v := range slices.Backward(e.Abilities) {
-		if v.IsUsable(e.GetEntity()) {
-			return i
+		if _, b := v.IsUsable(e); b {
+			e.Abilities[i].CastAbility(&e.Stats)
+			return e.Abilities[i].Execute(opponents), i
 		}
 	}
-	return -1
+	return map[int][]model.Damage{}, -1
 }
-func (e *EnemyData) GetTarget(targets []*entity.EntityData, targetCount uint8, differentTargets bool) []int {
-	t := make([]int, targetCount)
-	for len(t) != int(targetCount) {
+func (controller EnemyController) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets, randomTargets bool) []int {
+	targets := make([]int, 0, targetCount)
+
+	for len(targets) != int(targetCount) {
 	newNum:
-		//Controllo se ci sono dei target forzati
-		if len(comm.EnemyForcedTargets) == 0 {
-			app := rand.Intn(len(targets))
-			if differentTargets {
-				for _, v := range t {
-					if v == app {
-						goto newNum
-					}
+		var target int = rand.Intn(len(opponents))
+		if len(EnemyForcedTargets) != 0 {
+			target = EnemyForcedTargets[rand.Intn(len(EnemyForcedTargets))]
+		}
+		if differentTargets {
+			for _, v := range targets {
+				if v == target {
+					goto newNum
 				}
-				t = append(t, app)
-				//Se i target devono esser differenti ma non ce ne sono abbastanza
-				if len(t) == len(targets) {
-					return t
-				}
-			} else {
-				t = append(t, app)
+			}
+			targets = append(targets, target)
+			//Se i target devono esser differenti ma non ce ne sono abbastanza
+			if len(targets) == len(opponents) {
+				return targets
 			}
 		} else {
-			app := comm.EnemyForcedTargets[rand.Intn(len(comm.EnemyForcedTargets))]
-			if differentTargets {
-				for _, v := range t {
-					if v == app {
-						goto newNum
-					}
-				}
-				t = append(t, app)
-				//Se i target devono esser differenti ma non ce ne sono abbastanza
-				if len(t) == len(comm.EnemyForcedTargets) {
-					return t
-				}
-			} else {
-				t = append(t, app)
-			}
+			targets = append(targets, target)
 		}
 	}
-	return t
+	return targets
 }
 func (e *EnemyData) SetAbilities(ad entity.AbilityData) {
-	//e.Abilities = append(e.Abilities, entity.NewAbility(ad))
-	e.Abilities[0].AbilityData = ad
-	e.Abilities[0].SetAbility(func(a ...any) any {
-
-		if len(a) != 1 {
-			panic("fk urself")
-		}
-		opponentTeam, ok := a[0].([]*entity.EntityData)
-		if !ok {
-			panic("fk me")
-		}
-		targets := e.GetTarget(opponentTeam, ad.TargetCount, ad.DifferentTargets)
+	e.Abilities[0] = entity.NewAbility(ad, func(opponents []*entity.EntityData) map[int][]model.Damage {
+		targets := e.GetTarget(opponents, ad.TargetCount, ad.DifferentTargets, false)
 
 		attacks := make(map[int][]model.Damage, len(targets))
 		for _, t := range targets {
-			if !e.HasHit(opponentTeam[t].Stats, float32(ad.Acc)) {
+			if !e.HasHit(opponents[t].Stats, float32(ad.Acc)) {
 				attacks[t] = append(attacks[t], model.Damage{DmgType: model.Miss, Amount: 0})
 				continue
 			}
@@ -124,7 +101,7 @@ func (e *EnemyData) SetAbilities(ad entity.AbilityData) {
 			spDmg := e.Stats[stat.SP_ATK] * ad.SpAtkMultiplier
 			dmgType := e.HasCritted()
 
-			attacks[t] = append(attacks[t], e.GetDamage(dmg, spDmg,opponentTeam[t].Stats,dmgType))
+			attacks[t] = append(attacks[t], e.GetDamage(dmg, spDmg, opponents[t].Stats, dmgType))
 		}
 		return attacks
 	})
@@ -141,7 +118,7 @@ func (e *EnemyData) SetArmor(sets []armor.ArmorSet) {
 			armorRate := rand.Intn(100)
 			if armorRate < 25+int(e.Level)/2 {
 				a := armor.NewArmorPiece(armor.ArmorPieceType(i), sets[rand.Intn(len(sets))])
-				e.Armor.AddPiece(a)
+				e.Armor.AddPiece(&a)
 			}
 		}
 	}

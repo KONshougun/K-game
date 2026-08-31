@@ -9,15 +9,19 @@ const(
 	Pure
 	Miss
 )
-
 type Damage struct{
 	DmgType DamageType
 	Amount 	float32
 }
 
 type HealType byte
-
 const(
 	Heal HealType = iota
 	Shield
+)
+
+type EnergyType byte
+const(
+	St EnergyType = iota
+	Mp
 )

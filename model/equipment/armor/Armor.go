@@ -9,11 +9,13 @@ import (
 
 type Armor struct {
 	armorPieces [TypeCount]*ArmorPiece
-	sets        [SetCount]uint8
+	sets        map[ArmorSet]uint8
 }
 
-func NewArmor(aps ...ArmorPiece) Armor {
-	var armor Armor
+func NewArmor(aps ...*ArmorPiece) Armor {
+	armor := Armor{
+		sets: make(map[ArmorSet]uint8, 5),
+	}
 	for _, ap := range aps {
 		if !armor.AddPiece(ap) {
 			panic(fmt.Sprintf("Il pezzo %v è ripetuto più volte", ap.Type))
@@ -23,10 +25,10 @@ func NewArmor(aps ...ArmorPiece) Armor {
 	return armor
 }
 
-func (armor *Armor) AddPiece(ap ArmorPiece) bool {
+func (armor *Armor) AddPiece(ap *ArmorPiece) bool {
 	ap.IsValid()
 	if armor.armorPieces[ap.Type] == nil {
-		armor.armorPieces[ap.Type] = &ap
+		armor.armorPieces[ap.Type] = ap
 		armor.sets[ap.Set]++
 		return true
 	} else {
@@ -42,7 +44,7 @@ func (armor *Armor) RemovePiece(t ArmorPieceType) bool {
 		return false
 	}
 }
-func (armor *Armor) SetPiece(ap ArmorPiece) {
+func (armor *Armor) SetPiece(ap *ArmorPiece) {
 	ap.IsValid()
 	armor.RemovePiece(ap.Type)
 	armor.AddPiece(ap)
@@ -54,16 +56,11 @@ func (armor Armor) GetPiece(t ArmorPieceType) (ArmorPiece, bool) {
 	return ArmorPiece{}, false
 }
 func (armor Armor) GetEffects() []effect.Effect {
-	eff := make([]effect.Effect, 0)
+	effs := make([]effect.Effect, 0, len(armor.sets))
 	for set, v := range armor.sets {
-		if v > 1 {
-			eff = append(eff, ArmorEffects[set].Effects[0])
-			if v > 4 {
-				eff = append(eff, ArmorEffects[set].Effects[1])
-			}
-		}
+		effs = append(effs, getEffects(set, v)...)
 	}
-	return eff
+	return effs
 }
 
 func (armor Armor) ForEach(f func(ArmorPiece)) {
@@ -96,12 +93,13 @@ func (armor Armor) String() string {
 		str.WriteString(ap.String())
 	})
 
+	//SBAGLIATO
 	var appStr strings.Builder
 	armor.ForEachSet(func(as ArmorSet, u uint8) {
 		appStr.WriteString(comm.Cyan.Write(as.String()))
-		appStr.Write([]byte("\n" + ArmorEffects[as].EffectsStr[0] + "\n"))
+		appStr.Write([]byte("\n" + ArmorEffects[as].effects[0].Description + "\n"))
 		if u > 4 {
-			appStr.Write([]byte(ArmorEffects[as].EffectsStr[1] + "\n"))
+			appStr.Write([]byte(ArmorEffects[as].effects[1].Description + "\n"))
 		}
 	})
 	if appStr.Cap() != 0 {

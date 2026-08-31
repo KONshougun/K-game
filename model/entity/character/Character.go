@@ -3,16 +3,23 @@ package character
 import (
 	"fmt"
 	"gioco/game/comm"
+	"gioco/model"
 	"gioco/model/entity"
 	"gioco/model/equipment/armor"
 	"gioco/model/equipment/weapon"
 	"gioco/model/stat"
+	"math/rand"
+	"slices"
 )
+
+var CharacterForcedTargets []int
 
 type Character interface {
 	GetCharacter() *CharacterData
 	AwakenAbility(index int)
 }
+
+type CharacterController struct{}
 type CharacterData struct {
 	*entity.EntityData
 	CharacterName
@@ -31,7 +38,7 @@ const xpScalingFactorCharacter = 1.2122855485170705
 
 func NewCharacter(name CharacterName, a *armor.Armor, w *weapon.Weapon, wt weapon.WeaponType) *CharacterData {
 	c := &CharacterData{
-		EntityData: entity.NewEntity(name.String()),
+		EntityData: entity.NewEntity(name.String(), CharacterController{}),
 		XpRequired: 50,
 	}
 	c.Abilities = make([]entity.Ability, 4)
@@ -45,26 +52,20 @@ func NewCharacter(name CharacterName, a *armor.Armor, w *weapon.Weapon, wt weapo
 	}
 	if a != nil {
 		c.Armor = *a
-	} else {
-		c.Armor = armor.NewArmor()
 	}
-
-	//c.CharacterController.SetAbilities(c)
-	//c.CharacterController.SetPassives(c)
 
 	return c
 }
 func (c *CharacterData) GetEntity() *entity.EntityData {
 	return c.EntityData
 }
-func (c *CharacterData) GetAbility() int {
+func (controller CharacterController) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
 	var action int
 
-	fmt.Printf("c.Stats[stat.ST]: %v\n", c.Stats[stat.ST])
-	fmt.Printf("c.Stats[stat.Mp]: %v\n", c.Stats[stat.MP])
-	abilities := make([]bool, len(c.Abilities))
-	for i := range c.Abilities {
-		abilities[i] = c.Abilities[i].IsUsable(c.GetEntity())
+	abilities := make([]bool, len(e.Abilities))
+	appSrt := make([]string, len(e.Abilities))
+	for i := range e.Abilities {
+		appSrt[i], abilities[i] = e.Abilities[i].IsUsable(e)
 	}
 
 	fmt.Println("Selezionare l'abilità da voler utilizzare")
@@ -72,84 +73,90 @@ func (c *CharacterData) GetAbility() int {
 		found := false
 		for i, v := range abilities {
 			if v {
-				fmt.Printf(" %v - %s\n", (i + 1), comm.Yellow.Write(c.Abilities[i].Name))
+				fmt.Printf(" %v - %s\n", (i + 1), comm.Yellow.Write(e.Abilities[i].Name))
 				found = true
 			} else {
-				fmt.Printf(" %v - Abilità non disponibile\n", c.Abilities[i])
+				fmt.Printf(" %v - %v\n", e.Abilities[i], appSrt[i])
 			}
 		}
-		if !found{
-			return -1
+		if !found {
+			return map[int][]model.Damage{}, -1
 		}
 		fmt.Scanln(&action)
 		//Perchè l'utente parte da 1
 		action--
 		if (action >= 0 && action < len(abilities)) && abilities[action] {
-			return action
+			e.Abilities[action].CastAbility(&e.Stats)
+			return e.Abilities[action].Execute(opponents), action
 		}
 	}
 }
-func (c *CharacterData) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets bool) []int {
+func (controller CharacterController) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets, randomTargets bool) []int {
 
 	targets := make([]int, 0, targetCount)
-	t := 0
 
-	fmt.Printf("Scegli %v targets\n", targetCount)
 	for len(targets) != int(targetCount) {
-		if len(comm.CharacterForcedTargets) == 0 {
-			for i, e := range opponents {
-				fmt.Printf(" %v : %v %vhp\n", (i + 1), e.Name, e.Stats[stat.HP])
+		t := 0
+		if !randomTargets {
+			fmt.Printf("Scegli %v targets\n", targetCount)
+			if len(CharacterForcedTargets) == 0 {
+				for i, e := range opponents {
+					fmt.Printf(" %v : %v %vhp\n", (i + 1), e.Name, e.Stats[stat.HP])
+				}
+			} else {
+				for i, e := range CharacterForcedTargets {
+					fmt.Printf(" %v : %v %vhp\n", (i + 1), opponents[e].Name, opponents[e].Stats[stat.HP])
+				}
 			}
+			fmt.Scanln(&t)
+			//l'utente parte da 1
+			t--
 		} else {
-			for i, e := range comm.CharacterForcedTargets {
-				fmt.Printf(" %v : %v %vhp\n", (i + 1), opponents[e].Name, opponents[e].Stats[stat.HP])
+			if len(CharacterForcedTargets) == 0 {
+				t = rand.Intn(len(opponents))
+			} else {
+				t = CharacterForcedTargets[rand.Intn(len(CharacterForcedTargets))]
 			}
 		}
-	NextTarget:
-		fmt.Scanln(&t)
-		//Perchè l'utente parte da 1
-		t--
 		if t >= 0 && t < len(opponents) {
-			if len(comm.CharacterForcedTargets) != 0 {
-				if t >= len(comm.CharacterForcedTargets) {
-					goto NextTarget
-				}
-				t = comm.CharacterForcedTargets[t]
+			if len(CharacterForcedTargets) != 0 && slices.Index(CharacterForcedTargets, t) == -1 {
+				continue
 			}
 			if differentTargets {
 				for _, v := range targets {
 					if t == v {
-						fmt.Println("Avversario già selezionato!!")
-						goto NextTarget
+						if !randomTargets {
+							fmt.Println("Avversario già selezionato!!")
+						}
+						continue
 					}
 				}
-				targets = append(targets, t)
-				//Se i targets devono esser differenti ma non ce ne sono abbastanza
-				if len(targets) == len(opponents) {
-					return targets
-				}
-			} else {
-				targets = append(targets, t)
+			}
+			targets = append(targets, t)
+			if len(targets) == len(opponents) ||
+				(len(CharacterForcedTargets) != 0 && len(targets) == len(CharacterForcedTargets)) {
+				return targets
 			}
 		} else {
 			fmt.Println("Target selezionato non corretto!!")
 		}
 	}
+
 	return targets
 }
 
-func (c *CharacterData) LevelUp() {
-	for c.XpRequired < c.Xp && !c.MaxLvl {
-		c.Level++
-		c.Xp -= c.XpRequired
-		c.XpRequired = comm.GetXpRequired(c.Level, xpScalingFactorCharacter)
-		if c.Level == 100 || c.Level == 90 || c.Level == 50 {
-			c.MaxLvl = true
+func (e *CharacterData) LevelUp() {
+	for e.XpRequired < e.Xp && !e.MaxLvl {
+		e.Level++
+		e.Xp -= e.XpRequired
+		e.XpRequired = comm.GetXpRequired(e.Level, xpScalingFactorCharacter)
+		if e.Level == 100 || e.Level == 90 || e.Level == 50 {
+			e.MaxLvl = true
 		}
 	}
 
-	c.SetStatsOf(c.Level, CharactersBaseStats[c.CharacterName])
-	c.UnlockAbilities()
+	e.SetStatsOf(e.Level, CharactersBaseStats[e.CharacterName])
+	e.UnlockAbilities()
 }
 func (c *CharacterData) SetLevel(lvl uint8) {
 	c.Level = lvl
@@ -168,7 +175,7 @@ func (c *CharacterData) UnlockAbilities() {
 
 func (c *CharacterData) UnlockPassive(i int) {
 	c.Passives[i].Unlock = true
-	c.AddEffect(c.Passives[i].Effect.Event, c.Passives[i].Effect.IdEff, c.Passives[i].Effect.Trigger, c.Passives[i].Effect.Priority, c.Passives[i].Effect.Activate)
+	c.AddEffect(c.Passives[i].Effect.Event, c.Passives[i].Effect.Trigger, c.Passives[i].Effect.Priority, c.Passives[i].Effect.Activate)
 }
 
 /*
