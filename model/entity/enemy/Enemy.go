@@ -28,7 +28,6 @@ type ItemDrop struct {
 type Enemy interface {
 	GetEnemy() *EnemyData
 }
-type EnemyController struct{}
 type EnemyData struct {
 	*entity.EntityData
 	EnemyName
@@ -38,7 +37,7 @@ type EnemyData struct {
 
 func NewEnemy(name EnemyName, dropItems []adventure.Item) *EnemyData {
 	e := &EnemyData{
-		EntityData: entity.NewEntity(name.String(), EnemyController{}),
+		EntityData: entity.NewEntity(name.String(), &EnemyData{}),
 		dropItems:  dropItems,
 	}
 	e.EnemyName = name
@@ -51,7 +50,7 @@ func NewEnemy(name EnemyName, dropItems []adventure.Item) *EnemyData {
 func (c *EnemyData) GetEntity() *entity.EntityData {
 	return c.EntityData
 }
-func (controller EnemyController) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
+func (*EnemyData) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
 	for i, v := range slices.Backward(e.Abilities) {
 		if _, b := v.IsUsable(e); b {
 			e.Abilities[i].CastAbility(&e.Stats)
@@ -60,7 +59,7 @@ func (controller EnemyController) Attack(e *entity.EntityData, opponents []*enti
 	}
 	return map[int][]model.Damage{}, -1
 }
-func (controller EnemyController) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets, randomTargets bool) []int {
+func (*EnemyData) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets, randomTargets bool) []int {
 	targets := make([]int, 0, targetCount)
 
 	for len(targets) != int(targetCount) {
