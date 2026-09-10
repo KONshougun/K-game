@@ -29,7 +29,5 @@ func initGui() {
 	ebiten.SetWindowTitle("Gioco")
 
 	ebiten.SetFullscreen(true)
-	ebiten.RunGame(&gui.Game{
-		Scene: gui.NewGame().Scene,
-	})
+	ebiten.RunGame(gui.NewGame())
 }

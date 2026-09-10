@@ -1,6 +1,8 @@
 package gui
 
 import (
+	"image/color"
+
 	"github.com/KONshougun/K-game/gui/component"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -20,22 +22,24 @@ const (
 
 type Game struct {
 	Scene Scene
-	l     component.Label
+	l     *component.Label
 }
 
-//FUNZIONE DI TESTING
-func NewGame()Game{
-	return Game{l: component.NewLabel("Hello world", component.NormalSize, component.NoneSpace, text.AlignCenter, text.AlignCenter, component.Area{
-		X: 0,Y: 0,Width: GameWidth,Height: GameHeight,
+// FUNZIONE DI TESTING
+func NewGame() *Game {
+	return &Game{l: component.NewLabel("Hello world", color.White, component.VeryLargeSize, component.NoneSpace, text.AlignCenter, text.AlignCenter, component.Area{
+		X: 0, Y: 0, Width: GameWidth, Height: GameHeight,
 	})}
 }
 
 func (g *Game) Update() error {
-	return g.Scene.Update()
+	//return g.Scene.Update()
+	return g.l.Update()
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.Scene.Draw(screen)
+	g.l.Draw(screen)
+	//g.Scene.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {

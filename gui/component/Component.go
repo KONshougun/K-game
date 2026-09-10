@@ -1,11 +1,9 @@
 package component
 
-import "github.com/hajimehoshi/ebiten/v2"
-
-type ComponentController interface {
+/*type ComponentController interface {
 	Update() error
-	Draw(screen *ebiten.Image, width, height float64)
-}
+	Draw(screen *ebiten.Image)
+}*/
 
 type Area struct {
 	X      float64
@@ -15,13 +13,12 @@ type Area struct {
 }
 
 type Component struct {
-	ComponentController
 	Area
 }
 
-func NewComponent(controller ComponentController, area Area) Component {
-	return Component{
-		ComponentController: controller,
-		Area:                area,
+func NewComponent( /*controller ComponentController,*/ area Area) *Component {
+	return &Component{
+		//ComponentController: controller,
+		Area: area,
 	}
 }
