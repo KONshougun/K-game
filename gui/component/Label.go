@@ -1,7 +1,7 @@
 package component
 
 import (
-	"gioco/gui/handler"
+	"github.com/KONshougun/K-game/gui/handler"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"

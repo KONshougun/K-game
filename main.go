@@ -1,12 +1,12 @@
 package main
 
 import (
-	"gioco/game/characters"
-	"gioco/game/combat"
-	"gioco/game/enemies"
-	"gioco/gui"
-	"gioco/model/entity/character"
-	"gioco/model/entity/enemy"
+ "github.com/KONshougun/K-game/game/characters"
+ "github.com/KONshougun/K-game/game/combat"
+ "github.com/KONshougun/K-game/game/enemies"
+ "github.com/KONshougun/K-game/gui"
+ "github.com/KONshougun/K-game/model/entity/character"
+ "github.com/KONshougun/K-game/model/entity/enemy"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )

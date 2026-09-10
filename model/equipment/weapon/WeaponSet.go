@@ -1,9 +1,9 @@
 package weapon
 
 import (
-	effect "gioco/game/combat/effect"
-	"gioco/game/combat/event"
-	"gioco/model/stat"
+	effect "github.com/KONshougun/K-game/game/combat/effect"
+	"github.com/KONshougun/K-game/game/combat/event"
+	"github.com/KONshougun/K-game/model/stat"
 )
 
 type WeaponSet byte

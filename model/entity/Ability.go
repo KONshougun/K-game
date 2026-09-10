@@ -1,9 +1,9 @@
 package entity
 
 import (
-	"gioco/game/comm"
-	"gioco/model"
-	"gioco/model/stat"
+	"github.com/KONshougun/K-game/game/comm"
+	"github.com/KONshougun/K-game/model"
+	"github.com/KONshougun/K-game/model/stat"
 )
 
 type Ability struct {

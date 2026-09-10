@@ -9,8 +9,9 @@ import (
 )
 
 type Font string
-const(
-	NotoSerif = "K-game/assets/ui/font/NotoSerif-Regular.ttf"
+
+const (
+	NotoSerif = "github.com/KONshougun/K-game/assets/ui/font/NotoSerif.ttf"
 )
 
 func LoadFont(font Font, size float64) text.Face {

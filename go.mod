@@ -1,4 +1,4 @@
-module gioco
+module github.com/KONshougun/K-game
 
 go 1.25.4
 

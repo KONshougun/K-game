@@ -1,6 +1,6 @@
 package equipment
 
-import s "gioco/model/stat"
+import s "github.com/KONshougun/K-game/model/stat"
 
 type Equipment struct {
 	MainStats s.Stats

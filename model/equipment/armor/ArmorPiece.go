@@ -2,9 +2,9 @@ package armor
 
 import (
 	"fmt"
-	"gioco/game/comm"
-	"gioco/model/equipment"
-	"gioco/model/stat"
+	"github.com/KONshougun/K-game/game/comm"
+	"github.com/KONshougun/K-game/model/equipment"
+	"github.com/KONshougun/K-game/model/stat"
 	"math/rand"
 	"strconv"
 	"strings"

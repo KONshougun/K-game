@@ -2,8 +2,8 @@ package armor
 
 import (
 	"fmt"
-	"gioco/game/combat/effect"
-	"gioco/game/comm"
+	"github.com/KONshougun/K-game/game/combat/effect"
+	"github.com/KONshougun/K-game/game/comm"
 	"strings"
 )
 

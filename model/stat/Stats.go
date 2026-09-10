@@ -1,7 +1,7 @@
 package stat
 
 import (
-	"gioco/game/comm"
+	"github.com/KONshougun/K-game/game/comm"
 	"strconv"
 	"strings"
 )

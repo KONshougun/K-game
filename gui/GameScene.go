@@ -1,7 +1,7 @@
 package gui
 
 import (
-	"gioco/gui/component"
+	"github.com/KONshougun/K-game/gui/component"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -10,7 +10,7 @@ import (
 type Scene interface {
 	Update() error
 	Draw(screen *ebiten.Image)
-	//Layout(outsideWidth, outsideHeight int) (int, int)
+	Layout(outsideWidth, outsideHeight int) (int, int)
 }
 
 const (

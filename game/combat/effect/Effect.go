@@ -1,6 +1,6 @@
 package effect
 
-import "gioco/game/combat/event"
+import "github.com/KONshougun/K-game/game/combat/event"
 
 //type IdEffect byte
 

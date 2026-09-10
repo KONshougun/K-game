@@ -1,12 +1,12 @@
 package entity
 
 import (
-	"gioco/game/combat/effect"
-	"gioco/game/combat/event"
-	"gioco/model"
-	"gioco/model/equipment/armor"
-	"gioco/model/equipment/weapon"
-	"gioco/model/stat"
+	"github.com/KONshougun/K-game/game/combat/effect"
+	"github.com/KONshougun/K-game/game/combat/event"
+	"github.com/KONshougun/K-game/model"
+	"github.com/KONshougun/K-game/model/equipment/armor"
+	"github.com/KONshougun/K-game/model/equipment/weapon"
+	"github.com/KONshougun/K-game/model/stat"
 	"math"
 	"math/rand"
 	"sort"

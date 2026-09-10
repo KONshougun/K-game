@@ -1,6 +1,6 @@
 package entity
 
-import "gioco/model/stat"
+import "github.com/KONshougun/K-game/model/stat"
 
 type EntityClass byte
 

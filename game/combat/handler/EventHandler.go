@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"gioco/game/combat/event"
-	"gioco/game/comm/area"
-	"gioco/model"
-	"gioco/model/entity"
-	"gioco/model/stat"
+ "github.com/KONshougun/K-game/game/combat/event"
+ "github.com/KONshougun/K-game/game/comm/area"
+ "github.com/KONshougun/K-game/model"
+ "github.com/KONshougun/K-game/model/entity"
+ "github.com/KONshougun/K-game/model/stat"
 )
 
 type SetEntityData struct {

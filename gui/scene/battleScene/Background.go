@@ -1,7 +1,7 @@
 package battlescene
 
 import (
-	"gioco/game/comm/area"
+	"github.com/KONshougun/K-game/game/comm/area"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )

@@ -2,12 +2,12 @@ package character
 
 import (
 	"fmt"
-	"gioco/game/comm"
-	"gioco/model"
-	"gioco/model/entity"
-	"gioco/model/equipment/armor"
-	"gioco/model/equipment/weapon"
-	"gioco/model/stat"
+	"github.com/KONshougun/K-game/game/comm"
+	"github.com/KONshougun/K-game/model"
+	"github.com/KONshougun/K-game/model/entity"
+	"github.com/KONshougun/K-game/model/equipment/armor"
+	"github.com/KONshougun/K-game/model/equipment/weapon"
+	"github.com/KONshougun/K-game/model/stat"
 	"math/rand"
 	"slices"
 )

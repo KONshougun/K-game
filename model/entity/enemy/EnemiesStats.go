@@ -1,6 +1,6 @@
 package enemy
 
-import "gioco/model/stat"
+import "github.com/KONshougun/K-game/model/stat"
 
 type EnemyName uint16
 

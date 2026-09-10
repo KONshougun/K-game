@@ -1,9 +1,9 @@
 package battlescene
 
 import (
-	"gioco/game/comm/area"
-	"gioco/gui"
-	"gioco/model/entity"
+	"github.com/KONshougun/K-game/game/comm/area"
+	"github.com/KONshougun/K-game/gui"
+	"github.com/KONshougun/K-game/model/entity"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )

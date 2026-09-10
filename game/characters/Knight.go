@@ -1,14 +1,14 @@
 package characters
 
 import (
-	"gioco/game/combat/effect"
-	"gioco/game/combat/event"
-	"gioco/model"
-	"gioco/model/entity"
-	"gioco/model/entity/character"
-	"gioco/model/equipment/armor"
-	"gioco/model/equipment/weapon"
-	"gioco/model/stat"
+ "github.com/KONshougun/K-game/game/combat/effect"
+ "github.com/KONshougun/K-game/game/combat/event"
+ "github.com/KONshougun/K-game/model"
+ "github.com/KONshougun/K-game/model/entity"
+ "github.com/KONshougun/K-game/model/entity/character"
+ "github.com/KONshougun/K-game/model/equipment/armor"
+ "github.com/KONshougun/K-game/model/equipment/weapon"
+ "github.com/KONshougun/K-game/model/stat"
 )
 
 type Knight struct {

@@ -1,12 +1,12 @@
 package enemy
 
 import (
-	"gioco/game/adventure"
-	"gioco/model"
-	"gioco/model/entity"
-	"gioco/model/equipment/armor"
-	"gioco/model/equipment/weapon"
-	"gioco/model/stat"
+	"github.com/KONshougun/K-game/game/adventure"
+	"github.com/KONshougun/K-game/model"
+	"github.com/KONshougun/K-game/model/entity"
+	"github.com/KONshougun/K-game/model/equipment/armor"
+	"github.com/KONshougun/K-game/model/equipment/weapon"
+	"github.com/KONshougun/K-game/model/stat"
 	"math/rand"
 	"slices"
 )

@@ -1,8 +1,8 @@
 package area
 
 import (
-	"gioco/game/combat/effect"
-	"gioco/game/combat/event"
+	"github.com/KONshougun/K-game/game/combat/effect"
+	"github.com/KONshougun/K-game/game/combat/event"
 	"sort"
 )
 
