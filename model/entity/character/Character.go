@@ -18,6 +18,7 @@ type Character interface {
 	GetCharacter() *CharacterData
 	AwakenAbility(index int)
 }
+type CharacterController struct{}
 type CharacterData struct {
 	*entity.EntityData
 	CharacterName
@@ -36,7 +37,7 @@ const xpScalingFactorCharacter = 1.2122855485170705
 
 func NewCharacter(name CharacterName, a *armor.Armor, w *weapon.Weapon, wt weapon.WeaponType) *CharacterData {
 	c := &CharacterData{
-		EntityData: entity.NewEntity(name.String(), &CharacterData{}),
+		EntityData: entity.NewEntity(name.String(), CharacterController{}),
 		XpRequired: 50,
 	}
 	c.Abilities = make([]entity.Ability, 4)
@@ -57,7 +58,7 @@ func NewCharacter(name CharacterName, a *armor.Armor, w *weapon.Weapon, wt weapo
 func (c *CharacterData) GetEntity() *entity.EntityData {
 	return c.EntityData
 }
-func (*CharacterData) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
+func (CharacterController) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
 	var action int
 
 	abilities := make([]bool, len(e.Abilities))
@@ -89,7 +90,7 @@ func (*CharacterData) Attack(e *entity.EntityData, opponents []*entity.EntityDat
 		}
 	}
 }
-func (*CharacterData) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets, randomTargets bool) []int {
+func (CharacterController) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets, randomTargets bool) []int {
 
 	targets := make([]int, 0, targetCount)
 

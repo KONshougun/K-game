@@ -1,14 +1,15 @@
 package enemy
 
 import (
+	"math/rand"
+	"slices"
+
 	"github.com/KONshougun/K-game/game/adventure"
 	"github.com/KONshougun/K-game/model"
 	"github.com/KONshougun/K-game/model/entity"
 	"github.com/KONshougun/K-game/model/equipment/armor"
 	"github.com/KONshougun/K-game/model/equipment/weapon"
 	"github.com/KONshougun/K-game/model/stat"
-	"math/rand"
-	"slices"
 )
 
 var EnemyForcedTargets []int
@@ -28,6 +29,7 @@ type ItemDrop struct {
 type Enemy interface {
 	GetEnemy() *EnemyData
 }
+type EnemyController struct{}
 type EnemyData struct {
 	*entity.EntityData
 	EnemyName
@@ -37,7 +39,7 @@ type EnemyData struct {
 
 func NewEnemy(name EnemyName, dropItems []adventure.Item) *EnemyData {
 	e := &EnemyData{
-		EntityData: entity.NewEntity(name.String(), &EnemyData{}),
+		EntityData: entity.NewEntity(name.String(), EnemyController{}),
 		dropItems:  dropItems,
 	}
 	e.EnemyName = name
@@ -50,7 +52,7 @@ func NewEnemy(name EnemyName, dropItems []adventure.Item) *EnemyData {
 func (c *EnemyData) GetEntity() *entity.EntityData {
 	return c.EntityData
 }
-func (*EnemyData) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
+func (EnemyController) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
 	for i, v := range slices.Backward(e.Abilities) {
 		if _, b := v.IsUsable(e); b {
 			e.Abilities[i].CastAbility(&e.Stats)
@@ -59,7 +61,7 @@ func (*EnemyData) Attack(e *entity.EntityData, opponents []*entity.EntityData) (
 	}
 	return map[int][]model.Damage{}, -1
 }
-func (*EnemyData) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets, randomTargets bool) []int {
+func (EnemyController) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets, randomTargets bool) []int {
 	targets := make([]int, 0, targetCount)
 
 	for len(targets) != int(targetCount) {

@@ -1,12 +1,8 @@
 package gui
 
 import (
-	"image/color"
-
 	"github.com/KONshougun/K-game/gui/component"
-
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 type Scene interface {
@@ -22,23 +18,34 @@ const (
 
 type Game struct {
 	Scene Scene
-	l     *component.Label
+	p     component.ProgressBar
 }
 
 // FUNZIONE DI TESTING
 func NewGame() *Game {
-	return &Game{l: component.NewLabel("Hello world", color.White, component.VeryLargeSize, component.NoneSpace, text.AlignCenter, text.AlignCenter, component.Area{
-		X: 0, Y: 0, Width: GameWidth, Height: GameHeight,
+	a := 5.0
+	b := 10.0
+	return &Game{p: *component.NewProgressBar(&a, &b, true, component.Area{
+		X:      GameWidth/2-GameWidth/8,
+		Y:      GameHeight/2-GameHeight/8,
+		Width:  GameWidth/4,
+		Height: GameHeight/4,
 	})}
 }
 
 func (g *Game) Update() error {
+	if *g.p.CurrValue == 0{
+		*g.p.CurrValue = *g.p.MaxValue
+	}else{
+		*g.p.CurrValue--
+	}
+	g.p.Update()
+	return nil
 	//return g.Scene.Update()
-	return g.l.Update()
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.l.Draw(screen)
+	g.p.Draw(screen)
 	//g.Scene.Draw(screen)
 }
 
