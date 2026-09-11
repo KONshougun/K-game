@@ -1,7 +1,7 @@
 package component
 
-/*type ComponentController interface {
-	Update() error
+/*type Controller interface {
+	Update()
 	Draw(screen *ebiten.Image)
 }*/
 
@@ -13,12 +13,13 @@ type Area struct {
 }
 
 type Component struct {
+	//Controller
 	Area
 }
 
-func NewComponent( /*controller ComponentController,*/ area Area) *Component {
+func NewComponent( /*controller Controller,*/ area Area) *Component {
 	return &Component{
-		//ComponentController: controller,
+		//Controller: controller,
 		Area: area,
 	}
 }

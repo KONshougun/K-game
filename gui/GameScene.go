@@ -4,7 +4,9 @@ import (
 	"image/color"
 
 	"github.com/KONshougun/K-game/gui/component"
+	"github.com/KONshougun/K-game/gui/handler"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 type Scene interface {
@@ -20,38 +22,35 @@ const (
 
 type Game struct {
 	Scene Scene
-	p     component.ProgressBar
+
+	b *component.Button
 }
 
 // FUNZIONE DI TESTING
 func NewGame() *Game {
-	a := 4.0
-	b := 10.0
-	return &Game{p: *component.NewProgressBar(&a, &b, color.RGBA{50, 50, 50, 255}, color.RGBA{200, 50, 50, 255},
-		false, component.BorderOptions{
-			BorderColor: color.White,
-			BorderWidth: 2,
-		}, component.Area{
-			X:      GameWidth/2 - GameWidth/8,
-			Y:      GameHeight/2 - GameHeight/8,
-			Width:  GameWidth / 4,
-			Height: GameHeight / 4,
-		})}
+	area := component.Area{
+		X:      GameWidth/2 - GameWidth/8,
+		Y:      GameHeight/2 - GameHeight/8,
+		Width:  GameWidth / 4,
+		Height: GameHeight / 4,
+	}
+	return &Game{b: component.NewButton([component.CountBtnState]*ebiten.Image{
+		handler.LoadImage("assets/ui/component/button/button-up.png"),
+		handler.LoadImage("assets/ui/component/button/button-up.png"),
+		handler.LoadImage("assets/ui/component/button/button-down.png"),
+		handler.LoadImage("assets/ui/component/button/button-up.png"),
+	}, component.NewLabel("Hello", color.Black, component.VeryLargeSize, component.NoneSpace,
+		text.AlignCenter, text.AlignCenter, area), area, func() {})}
 }
 
 func (g *Game) Update() error {
-	if *g.p.CurrValue == 0 {
-		*g.p.CurrValue = *g.p.MaxValue
-	} else {
-		*g.p.CurrValue--
-	}
-	g.p.Update()
+	g.b.Update()
 	return nil
 	//return g.Scene.Update()
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.p.Draw(screen)
+	g.b.Draw(screen)
 	//g.Scene.Draw(screen)
 }
 

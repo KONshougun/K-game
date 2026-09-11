@@ -38,7 +38,7 @@ type Label struct {
 }
 
 func NewLabel(str string, c color.Color, size Size, space LineSpacing, horizontalAlign, verticalAlign text.Align, area Area) *Label {
-	l := &Label{
+	return &Label{
 		Component: NewComponent(area),
 
 		Text: str,
@@ -54,8 +54,6 @@ func NewLabel(str string, c color.Color, size Size, space LineSpacing, horizonta
 			},
 		},
 	}
-
-	return l
 }
 
 func (l *Label) Update() error {
