@@ -7,21 +7,36 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+type BorderOptions struct {
+	BorderColor color.Color
+	BorderWidth float64
+}
+
 type ProgressBar struct {
-	Component
+	*Component
 
 	CurrValue *float64
 	MaxValue  *float64
 
-	Antialias bool
+	Border          BorderOptions
+	BackgroundColor color.Color
+	BarColor        color.Color
+	Antialias       bool
 }
 
-func NewProgressBar(value, maxValue *float64, antialias bool, area Area) *ProgressBar {
+func NewProgressBar(value, maxValue *float64, backgroundColor, barColor color.Color,
+	antialias bool, border BorderOptions, area Area) *ProgressBar {
+	if *value > *maxValue {
+		panic("Pozza ingroppase")
+	}
 	return &ProgressBar{
-		Component: *NewComponent(area),
-		CurrValue: value,
-		MaxValue:  maxValue,
-		Antialias: antialias,
+		Component:       NewComponent(area),
+		CurrValue:       value,
+		MaxValue:        maxValue,
+		BackgroundColor: backgroundColor,
+		BarColor:        barColor,
+		Border:          border,
+		Antialias:       antialias,
 	}
 }
 
@@ -38,7 +53,7 @@ func (b *ProgressBar) Draw(screen *ebiten.Image) {
 		float32(b.Y),
 		float32(b.Width),
 		float32(b.Height),
-		color.RGBA{50, 50, 50, 255},
+		b.BackgroundColor,
 		b.Antialias,
 	)
 
@@ -49,7 +64,19 @@ func (b *ProgressBar) Draw(screen *ebiten.Image) {
 		float32(b.Y),
 		float32(b.Width*ratio),
 		float32(b.Height),
-		color.RGBA{200, 50, 50, 255},
+		b.BarColor,
 		b.Antialias,
+	)
+	
+	//Bordo
+	vector.StrokeRect(
+		screen,
+		float32(b.X),
+		float32(b.Y),
+		float32(b.Width),
+		float32(b.Height),
+		float32(b.Border.BorderWidth),
+		b.Border.BorderColor,
+		false,
 	)
 }
