@@ -47,7 +47,7 @@ var ArmorEffects = [SetCount]ArmorData{
 				RequiredPieces: 2,
 				Description:    "Aumenta l'attacco di 20",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.ATK] += 20
+					evData.GetData()[0].(*stat.Stats)[stat.Atk] += 20
 					return evData
 				}),
 			},
@@ -55,8 +55,8 @@ var ArmorEffects = [SetCount]ArmorData{
 				RequiredPieces: 5,
 				Description:    "Aumenta gli hp di 20 la difesa di 16",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.HP] += 20
-					evData.GetData()[0].(*stat.Stats)[stat.DEF] += 16
+					evData.GetData()[0].(*stat.Stats)[stat.Hp] += 20
+					evData.GetData()[0].(*stat.Stats)[stat.Def] += 16
 					return evData
 				}),
 			},
@@ -68,15 +68,15 @@ var ArmorEffects = [SetCount]ArmorData{
 				RequiredPieces: 2,
 				Description:    "Aumenta la stamina di 25",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.ST] += 25
+					evData.GetData()[0].(*stat.Stats)[stat.St] += 25
 					return evData
 				}),
 			}, {
 				RequiredPieces: 5,
 				Description:    "Aumenta l'attacco di 15 e la velocità di 20",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.ATK] += 15
-					evData.GetData()[0].(*stat.Stats)[stat.SPD] += 20
+					evData.GetData()[0].(*stat.Stats)[stat.Atk] += 15
+					evData.GetData()[0].(*stat.Stats)[stat.Spd] += 20
 					return evData
 				}),
 			},
@@ -88,15 +88,15 @@ var ArmorEffects = [SetCount]ArmorData{
 				RequiredPieces: 2,
 				Description:    "Aumenta la difesa di 10",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.DEF] += 10
+					evData.GetData()[0].(*stat.Stats)[stat.Def] += 10
 					return evData
 				}),
 			}, {
 				RequiredPieces: 5,
 				Description:    "Aumenta gli hp di 25 e l'attacco di 20",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.HP] += 25
-					evData.GetData()[0].(*stat.Stats)[stat.ATK] += 20
+					evData.GetData()[0].(*stat.Stats)[stat.Hp] += 25
+					evData.GetData()[0].(*stat.Stats)[stat.Atk] += 20
 					return evData
 				}),
 			},
@@ -108,15 +108,15 @@ var ArmorEffects = [SetCount]ArmorData{
 				RequiredPieces: 2,
 				Description:    "Aumenta il mana di 25",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.MP] += 25
+					evData.GetData()[0].(*stat.Stats)[stat.Mp] += 25
 					return evData
 				}),
 			}, {
 				RequiredPieces: 5,
 				Description:    "Aumenta l'attacco speciale di 20 e la difesa di 20",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.SP_ATK] += 20
-					evData.GetData()[0].(*stat.Stats)[stat.DEF] += 20
+					evData.GetData()[0].(*stat.Stats)[stat.SpAtk] += 20
+					evData.GetData()[0].(*stat.Stats)[stat.Def] += 20
 					return evData
 				}),
 			},
@@ -128,16 +128,16 @@ var ArmorEffects = [SetCount]ArmorData{
 				RequiredPieces: 2,
 				Description:    "Aumenta gli hp di 50 e la velocità di 100",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.HP] += 50
-					evData.GetData()[0].(*stat.Stats)[stat.SPD] += 100
+					evData.GetData()[0].(*stat.Stats)[stat.Hp] += 50
+					evData.GetData()[0].(*stat.Stats)[stat.Spd] += 100
 					return evData
 				}),
 			}, {
 				RequiredPieces: 5,
 				Description:    "Aumenta la difesa e la difesa speciale di 25",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.DEF] += 25
-					evData.GetData()[0].(*stat.Stats)[stat.SP_DEF] += 25
+					evData.GetData()[0].(*stat.Stats)[stat.Def] += 25
+					evData.GetData()[0].(*stat.Stats)[stat.SpDef] += 25
 					return evData
 				}),
 			},
@@ -149,16 +149,16 @@ var ArmorEffects = [SetCount]ArmorData{
 				RequiredPieces: 2,
 				Description:    "Aumenta la difesa speciale di 20 e il mana di 30",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.SP_DEF] += 20
-					evData.GetData()[0].(*stat.Stats)[stat.MP] += 30
+					evData.GetData()[0].(*stat.Stats)[stat.SpDef] += 20
+					evData.GetData()[0].(*stat.Stats)[stat.Mp] += 30
 					return evData
 				}),
 			}, {
 				RequiredPieces: 5,
 				Description:    "Aumenta l'attacco speciale di 25 e la perforazione speciale  di 7",
 				Effect: effect.NewEffect(0, event.SetEntityData, effect.None, effect.Normal, func(evData event.EventData) event.EventData {
-					evData.GetData()[0].(*stat.Stats)[stat.SP_PRF] += 7
-					evData.GetData()[0].(*stat.Stats)[stat.SP_ATK] += 25
+					evData.GetData()[0].(*stat.Stats)[stat.SpPrf] += 7
+					evData.GetData()[0].(*stat.Stats)[stat.SpAtk] += 25
 					return evData
 				}),
 			},

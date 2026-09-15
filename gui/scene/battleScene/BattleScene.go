@@ -3,7 +3,8 @@ package battlescene
 import (
 	"github.com/KONshougun/K-game/game/comm/area"
 	"github.com/KONshougun/K-game/gui"
-	"github.com/KONshougun/K-game/model/entity"
+	"github.com/KONshougun/K-game/model/entity/character"
+	"github.com/KONshougun/K-game/model/entity/enemy"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -15,30 +16,23 @@ type BattleScene struct {
 	Background *Background
 }
 
-func NewBattleScene(characters, enemies []*entity.EntityData, area *area.Area) *BattleScene {
+func NewBattleScene(characters []character.Character, enemies []enemy.Enemy, area *area.Area) *BattleScene {
 	return &BattleScene{
-		Characters: NewTeamView(characters),
-		Enemies:    NewTeamView(enemies),
+		Characters: NewTeamView(),
+		Enemies:    NewTeamView(),
 		Background: NewBackground(area),
 	}
 }
 
 func (s *BattleScene) Update() error {
-	if s.Characters != nil {
-		s.Characters.Update()
-	}
-
-	if s.Enemies != nil {
-		s.Enemies.Update()
-	}
-
-	if s.ActionMenu != nil {
-		s.ActionMenu.Update()
-	}
-
+	s.Background.Update()
+	s.Characters.Update()
+	s.Enemies.Update()
+	s.ActionMenu.Update()
 	return nil
 }
 func (s *BattleScene) Draw(screen *ebiten.Image) {
+	s.Background.Draw(screen)
 	//s.Characters.Draw(screen.SubImage(image.Rect()))
 	//s.Enemies.Draw(screen.SubImage(image.Rect()))
 	//s.ActionMenu.Draw(screen.SubImage(image.Rect()))

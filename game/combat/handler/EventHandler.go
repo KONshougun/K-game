@@ -1,11 +1,11 @@
 package handler
 
 import (
- "github.com/KONshougun/K-game/game/combat/event"
- "github.com/KONshougun/K-game/game/comm/area"
- "github.com/KONshougun/K-game/model"
- "github.com/KONshougun/K-game/model/entity"
- "github.com/KONshougun/K-game/model/stat"
+	"github.com/KONshougun/K-game/game/combat/event"
+	"github.com/KONshougun/K-game/game/comm/area"
+	"github.com/KONshougun/K-game/model"
+	"github.com/KONshougun/K-game/model/entity"
+	"github.com/KONshougun/K-game/model/stat"
 )
 
 type SetEntityData struct {
@@ -57,7 +57,7 @@ type DamageDealt struct {
 	Opponents []*entity.EntityData
 	Area      area.AreaId
 	Target    *entity.EntityData
-	Amount    float32
+	Amount    float64
 	DmgType   model.DamageType
 }
 
@@ -71,7 +71,7 @@ type DamageTaken struct {
 	Opponents []*entity.EntityData
 	Area      area.AreaId
 	Actor     *entity.EntityData
-	Amount    float32
+	Amount    float64
 	DmgType   model.DamageType
 }
 
@@ -85,7 +85,7 @@ type HealDealt struct {
 	Opponents []*entity.EntityData
 	Area      area.AreaId
 	Target    *entity.EntityData
-	Amount    float32
+	Amount    float64
 	HealType  model.HealType
 }
 
@@ -99,7 +99,7 @@ type HealTaken struct {
 	Opponents []*entity.EntityData
 	Area      area.AreaId
 	Actor     *entity.EntityData
-	Amount    float32
+	Amount    float64
 	HealType  model.HealType
 }
 
@@ -134,7 +134,7 @@ type EnergyRecovered struct {
 	Team       []*entity.EntityData
 	Opponents  []*entity.EntityData
 	Area       area.AreaId
-	Amount     float32
+	Amount     float64
 	EnergyType model.EnergyType
 }
 
@@ -147,7 +147,7 @@ type EnergySpent struct {
 	Team       []*entity.EntityData
 	Opponents  []*entity.EntityData
 	Area       area.AreaId
-	Amount     float32
+	Amount     float64
 	EnergyType model.EnergyType
 }
 
@@ -188,7 +188,7 @@ type Died struct {
 	Opponents []*entity.EntityData
 	Area      area.AreaId
 	Actor     *entity.EntityData
-	Amount    float32
+	Amount    float64
 	DmgType   model.DamageType
 	IsAlive   bool
 }

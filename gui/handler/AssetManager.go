@@ -2,9 +2,11 @@ package handler
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"os"
 
+	"github.com/KONshougun/K-game/model/entity"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -26,15 +28,18 @@ func (a *AssetManager) Get(path string) *ebiten.Image {
 	return img
 }*/
 
-func LoadImage(path string) *ebiten.Image /*, error*/ {
+func LoadImage(path string) *ebiten.Image {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil //, err
+		return nil
 	}
 
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return nil //, err
+		return nil
 	}
-	return ebiten.NewImageFromImage(img) //, nil
+	return ebiten.NewImageFromImage(img)
+}
+func GetAvatar(name string, entityT entity.EntityType) *ebiten.Image {
+	return LoadImage(fmt.Sprintf("asset/entity/%s/avatar/%s.png", entityT.String(), name))
 }

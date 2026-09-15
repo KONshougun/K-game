@@ -11,7 +11,7 @@ import (
 type Font string
 
 const (
-	NotoSerif = "assets/ui/font/NotoSerif.ttf"
+	NotoSerif = "asset/ui/font/NotoSerif.ttf"
 )
 
 func LoadFont(font Font, size float64) text.Face {

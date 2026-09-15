@@ -2,57 +2,57 @@ package stat
 
 type StatName byte
 
-const(
-	HP StatName = iota
+const (
+	Hp StatName = iota
 
-	ATK
-	SP_ATK
+	Atk
+	SpAtk
 
-	DEF
-	SP_DEF
+	Def
+	SpDef
 
-	PRF
-	SP_PRF
+	Prf
+	SpPrf
 
-	SPD
-	ATK_SPD
+	Spd
+	AtkSpd
 
-	CRIT_RATE
-	CRIT_DMG
-	CRIT_RES
+	CritRate
+	CritDmg
+	CritRes
 
-	ST
-	MP
+	St
+	Mp
 
-	ST_RG
-	MP_RG
+	StRg
+	MpRg
 
-	ACC
-	EVA
-	RES
-	QTR
+	Acc
+	Eva
+	Res
+	Qtr
 
 	StatCount
 )
 
-func (s StatName) String() string{
+func (s StatName) String() string {
 	return [...]string{
 		"HP",
 		"ATK",
-		"SP_ATK",
+		"SP ATK",
 		"DEF",
-		"SP_DEF",
+		"SP DEF",
 		"PRF",
-		"SP_PRF",
+		"SP PRF",
 		"SPD",
-		"ATK_SPD",
-		"CRIT_RATE",
-		"CRIT_DMG",
-		"CRIT_RES",
+		"ATK SPD",
+		"CRIT RATE",
+		"CRIT DMG",
+		"CRIT RES",
 		"ST",
 		"MP",
-		"ST_RG",
-		"MP_RG",
+		"ST RG",
+		"MP RG",
 		"ACC",
 		"EVA",
 		"RES",

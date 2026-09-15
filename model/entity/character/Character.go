@@ -2,14 +2,15 @@ package character
 
 import (
 	"fmt"
+	"math/rand"
+	"slices"
+
 	"github.com/KONshougun/K-game/game/comm"
 	"github.com/KONshougun/K-game/model"
 	"github.com/KONshougun/K-game/model/entity"
 	"github.com/KONshougun/K-game/model/equipment/armor"
 	"github.com/KONshougun/K-game/model/equipment/weapon"
 	"github.com/KONshougun/K-game/model/stat"
-	"math/rand"
-	"slices"
 )
 
 var CharacterForcedTargets []int
@@ -40,6 +41,7 @@ func NewCharacter(name CharacterName, a *armor.Armor, w *weapon.Weapon, wt weapo
 		EntityData: entity.NewEntity(name.String(), CharacterController{}),
 		XpRequired: 50,
 	}
+	c.EntityType = entity.Character
 	c.Abilities = make([]entity.Ability, 4)
 	c.AbilityAwakened = make([]bool, 4)
 
@@ -100,11 +102,11 @@ func (CharacterController) GetTarget(opponents []*entity.EntityData, targetCount
 			fmt.Printf("Scegli %v targets\n", targetCount)
 			if len(CharacterForcedTargets) == 0 {
 				for i, e := range opponents {
-					fmt.Printf(" %v : %v %vhp\n", (i + 1), e.Name, e.Stats[stat.HP])
+					fmt.Printf(" %v : %v %vhp\n", (i + 1), e.Name, e.Stats[stat.Hp])
 				}
 			} else {
 				for i, e := range CharacterForcedTargets {
-					fmt.Printf(" %v : %v %vhp\n", (i + 1), opponents[e].Name, opponents[e].Stats[stat.HP])
+					fmt.Printf(" %v : %v %vhp\n", (i + 1), opponents[e].Name, opponents[e].Stats[stat.Hp])
 				}
 			}
 			fmt.Scanln(&t)
@@ -190,7 +192,6 @@ func (c *CharacterData) UnlockPassive(i int) {
 		try {
 			thread.join();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			c.printStackTrace();
 		}
 		armor.toString();
@@ -204,7 +205,6 @@ func (c *CharacterData) UnlockPassive(i int) {
 	}
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
 		return Common.getPrint(nome, COLORS.cyan)+super.toString();
 	}
 }

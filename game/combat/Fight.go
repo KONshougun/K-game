@@ -2,18 +2,19 @@ package combat
 
 import (
 	"fmt"
- "github.com/KONshougun/K-game/game/combat/effect"
- "github.com/KONshougun/K-game/game/combat/event"
- "github.com/KONshougun/K-game/game/combat/handler"
- "github.com/KONshougun/K-game/game/comm"
- "github.com/KONshougun/K-game/game/comm/area"
- "github.com/KONshougun/K-game/model"
- "github.com/KONshougun/K-game/model/entity"
- "github.com/KONshougun/K-game/model/entity/character"
- "github.com/KONshougun/K-game/model/entity/enemy"
- "github.com/KONshougun/K-game/model/stat"
 	"maps"
 	"slices"
+
+	"github.com/KONshougun/K-game/game/combat/effect"
+	"github.com/KONshougun/K-game/game/combat/event"
+	"github.com/KONshougun/K-game/game/combat/handler"
+	"github.com/KONshougun/K-game/game/comm"
+	"github.com/KONshougun/K-game/game/comm/area"
+	"github.com/KONshougun/K-game/model"
+	"github.com/KONshougun/K-game/model/entity"
+	"github.com/KONshougun/K-game/model/entity/character"
+	"github.com/KONshougun/K-game/model/entity/enemy"
+	"github.com/KONshougun/K-game/model/stat"
 )
 
 func InitBattle(characters []character.Character, enemies []enemy.Enemy) {
@@ -83,15 +84,15 @@ qtrTrigged:
 	if idxAbility == -1 {
 		fmt.Println(comm.BrightYellow.Write(actor.Name) + " non ha abbastanza energia per utilizzare nessuna abilità")
 
-		actor.Stats[stat.ST] *= 1.30
-		if actor.Stats[stat.ST] > actor.MaxSt {
-			actor.Stats[stat.ST] = actor.MaxSt
+		actor.Stats[stat.St] *= 1.30
+		if actor.Stats[stat.St] > actor.MaxSt {
+			actor.Stats[stat.St] = actor.MaxSt
 		}
-		actor.Stats[stat.MP] *= 1.30
-		if actor.Stats[stat.MP] > actor.MaxMp {
-			actor.Stats[stat.MP] = actor.MaxMp
+		actor.Stats[stat.Mp] *= 1.30
+		if actor.Stats[stat.Mp] > actor.MaxMp {
+			actor.Stats[stat.Mp] = actor.MaxMp
 		}
-		actor.Stats[stat.SPD] -= 500 + actor.Stats[stat.ATK_SPD]
+		actor.Stats[stat.Spd] -= 500 + actor.Stats[stat.AtkSpd]
 	}
 
 	for i := range targets {
@@ -128,7 +129,8 @@ qtrTrigged:
 				fmt.Printf("targets[i][j].DmgType: %v\n", targets[i][j].DmgType)
 				panic("sega")
 			}
-			opponents[i].Stats[stat.HP] -= targets[i][j].Amount
+			opponents[i].Stats[stat.Hp] -= targets[i][j].Amount
+			opponents[i].Dameged(targets[i][j].Amount, targets[i][j].DmgType)
 
 			fmt.Printf(comm.Cyan.Write(actor.Name)+" ha inflitto %v a "+opponents[i].Name+"\n", targets[i][j].Amount)
 
@@ -140,7 +142,7 @@ qtrTrigged:
 				Amount:    targets[i][j].Amount,
 				DmgType:   targets[i][j].DmgType,
 			})
-			if opponents[i].Stats[stat.HP] <= 0 {
+			if opponents[i].Stats[stat.Hp] <= 0 {
 				break
 			}
 			opponents[i].TriggerEffects(event.DamageTaken, effect.After, &handler.DamageTaken{
@@ -154,20 +156,13 @@ qtrTrigged:
 		}
 	}
 	//Controllo se ci sono stati morti
-	app := 0
-	for i := range slices.Sorted(maps.Keys(targets)) {
-		if opponents[i-app].Stats[stat.HP] <= 0 {
-			evt := opponents[i-app].TriggerEffects(event.Died, effect.Before, &handler.Died{
-				Team:      team,
-				Opponents: opponents,
-				Area:      area.Id,
-				Actor:     actor,
-				Amount:    targets[i][len(targets[i])-1].Amount,
-				DmgType:   targets[i][len(targets[i])-1].DmgType,
-				IsAlive:   false,
-			})
-			if !*(evt.GetData()[6].(*bool)) {
-				evt = opponents[i-app].TriggerEffects(event.Died, effect.After, &handler.Died{
+	found := true
+	for found {
+		found = false
+		app := 0
+		for i := range slices.Sorted(maps.Keys(targets)) {
+			if opponents[i-app].Stats[stat.Hp] <= 0 {
+				evt := opponents[i-app].TriggerEffects(event.Died, effect.Before, &handler.Died{
 					Team:      team,
 					Opponents: opponents,
 					Area:      area.Id,
@@ -177,24 +172,36 @@ qtrTrigged:
 					IsAlive:   false,
 				})
 				if !*(evt.GetData()[6].(*bool)) {
-					fmt.Println(comm.BrightCyan.Write(opponents[i-app].Name) + " è stato eliminato")
-					opponents = append(opponents[:i-app], opponents[i+1-app:]...)
-					app++
+					evt = opponents[i-app].TriggerEffects(event.Died, effect.After, &handler.Died{
+						Team:      team,
+						Opponents: opponents,
+						Area:      area.Id,
+						Actor:     actor,
+						Amount:    targets[i][len(targets[i])-1].Amount,
+						DmgType:   targets[i][len(targets[i])-1].DmgType,
+						IsAlive:   false,
+					})
+					if !*(evt.GetData()[6].(*bool)) {
+						fmt.Println(comm.BrightCyan.Write(opponents[i-app].Name) + " è stato eliminato")
+						opponents = append(opponents[:i-app], opponents[i+1-app:]...)
+						app++
+						found = true
+					} else {
+						fmt.Println(comm.BrightCyan.Write(opponents[i-app].Name) + " è rinato")
+						opponents[i-app].TriggerEffects(event.Revived, effect.After, &handler.Revived{
+							Team:      team,
+							Opponents: opponents,
+							Area:      area.Id,
+						})
+					}
 				} else {
-					fmt.Println(comm.BrightCyan.Write(opponents[i-app].Name) + " è rinato")
-					opponents[i-app].TriggerEffects(event.Revived, effect.After, &handler.Revived{
+					fmt.Println(comm.BrightCyan.Write(opponents[i-app].Name) + " è sopravvissuto")
+					opponents[i-app].TriggerEffects(event.Resist, effect.After, &handler.Resist{
 						Team:      team,
 						Opponents: opponents,
 						Area:      area.Id,
 					})
 				}
-			} else {
-				fmt.Println(comm.BrightCyan.Write(opponents[i-app].Name) + " è sopravvissuto")
-				opponents[i-app].TriggerEffects(event.Resist, effect.After, &handler.Resist{
-					Team:      team,
-					Opponents: opponents,
-					Area:      area.Id,
-				})
 			}
 		}
 	}
@@ -228,17 +235,17 @@ func triggerEvent(ev event.EventType, team []*entity.EntityData, opponentTeam []
 }
 func getFasterEntity(team []*entity.EntityData, opponentTeam []*entity.EntityData) (int, bool) {
 	var idEntity int
-	var maxSpd float32
+	var maxSpd float64
 	isTeam := true
 	for i := range team {
-		if team[i].Stats[stat.SPD] > maxSpd {
-			maxSpd = team[i].Stats[stat.SPD]
+		if team[i].Stats[stat.Spd] > maxSpd {
+			maxSpd = team[i].Stats[stat.Spd]
 			idEntity = i
 		}
 	}
 	for i := range opponentTeam {
-		if opponentTeam[i].Stats[stat.SPD] > maxSpd {
-			maxSpd = opponentTeam[i].Stats[stat.SPD]
+		if opponentTeam[i].Stats[stat.Spd] > maxSpd {
+			maxSpd = opponentTeam[i].Stats[stat.Spd]
 			isTeam = false
 		}
 	}

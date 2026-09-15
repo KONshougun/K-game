@@ -2,26 +2,36 @@ package model
 
 type DamageType byte
 
-const(
+const (
 	Flat DamageType = iota
 	Crit
 	SuperCrit
 	Pure
 	Miss
 )
-type Damage struct{
+
+type SourceType byte
+const(
+	Ability SourceType = iota
+	Passive
+	Effect
+)
+
+type Damage struct {
 	DmgType DamageType
-	Amount 	float32
+	Amount  float64
 }
 
 type HealType byte
-const(
+
+const (
 	Heal HealType = iota
 	Shield
 )
 
 type EnergyType byte
-const(
+
+const (
 	St EnergyType = iota
 	Mp
 )

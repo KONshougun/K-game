@@ -1,12 +1,13 @@
 package weapon
 
 import (
-	"github.com/KONshougun/K-game/game/comm"
-	"github.com/KONshougun/K-game/model/equipment"
-	"github.com/KONshougun/K-game/model/stat"
 	"math/rand"
 	"strconv"
 	"strings"
+
+	"github.com/KONshougun/K-game/game/comm"
+	"github.com/KONshougun/K-game/model/equipment"
+	"github.com/KONshougun/K-game/model/stat"
 )
 
 type Weapon struct {
@@ -65,10 +66,10 @@ func (w *Weapon) setWeaponStats() {
 	}
 	w.MaxLevel = w.Rarity * 5
 
-	WeaponStats[w.Set].MainStats.ForEach(func(sn stat.StatName, f float32) {
+	WeaponStats[w.Set].MainStats.ForEach(func(sn stat.StatName, f float64) {
 		w.MainStats[sn] = f
 	})
-	WeaponStats[w.Set].SubStats.ForEach(func(sn stat.StatName, f float32) {
+	WeaponStats[w.Set].SubStats.ForEach(func(sn stat.StatName, f float64) {
 		w.SubStats[sn] = f
 	})
 }
@@ -82,7 +83,7 @@ func (w Weapon) String() string {
 
 	//MAIN STAT
 	str.WriteString(comm.Yellow.Write("\n\nMain stat: \n"))
-	w.MainStats.ForEach(func(sn stat.StatName, _ float32) {
+	w.MainStats.ForEach(func(sn stat.StatName, _ float64) {
 		str.Write([]byte(comm.Cyan.Write(sn.String() + ": ")))
 		str.Write([]byte(strconv.FormatFloat(float64(w.MainStats[sn]), 'f', -1, 32)))
 		str.WriteString("\n")
@@ -90,7 +91,7 @@ func (w Weapon) String() string {
 
 	//SUB STAT
 	str.WriteString(comm.Yellow.Write("\nSubstats: \n"))
-	w.SubStats.ForEach(func(sn stat.StatName, _ float32) {
+	w.SubStats.ForEach(func(sn stat.StatName, _ float64) {
 		str.Write([]byte(comm.Cyan.Write(sn.String()) + ": "))
 		str.Write([]byte(strconv.FormatFloat(float64(w.SubStats[sn]), 'f', -1, 32)))
 		str.WriteString("\n")

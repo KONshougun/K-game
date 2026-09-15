@@ -1,12 +1,12 @@
 package stat
 
 import (
-	"github.com/KONshougun/K-game/game/comm"
 	"strconv"
 	"strings"
-)
 
-type Stats [StatCount]float32
+	"github.com/KONshougun/K-game/game/comm"
+)
+type Stats [StatCount]float64
 
 func (s Stats) String() string {
 	var str strings.Builder
@@ -29,7 +29,7 @@ func (s Stats) Len() uint8 {
 	return count
 }
 
-func (s Stats) ForEach(f func(StatName, float32)) {
+func (s Stats) ForEach(f func(StatName, float64)) {
 	for i, v := range s {
 		if v != 0 {
 			f(StatName(i), v)

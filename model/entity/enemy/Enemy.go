@@ -42,8 +42,9 @@ func NewEnemy(name EnemyName, dropItems []adventure.Item) *EnemyData {
 		EntityData: entity.NewEntity(name.String(), EnemyController{}),
 		dropItems:  dropItems,
 	}
+	e.EntityType = entity.Enemy
 	e.EnemyName = name
-	e.Class = append(e.Class, entity.Enemy)
+	e.Class = append(e.Class, entity.EnemyClass)
 	e.Abilities = make([]entity.Ability, 1)
 
 	return e
@@ -93,16 +94,16 @@ func (e *EnemyData) SetAbilities(ad entity.AbilityData) {
 
 		attacks := make(map[int][]model.Damage, len(targets))
 		for _, t := range targets {
-			if !e.HasHit(opponents[t].Stats, float32(ad.Acc)) {
+			if !e.HasHit(opponents[t].Stats, float64(ad.Acc)) {
 				attacks[t] = append(attacks[t], model.Damage{DmgType: model.Miss, Amount: 0})
 				continue
 			}
 
-			dmg := e.Stats[stat.ATK] * ad.AtkMultiplier
-			spDmg := e.Stats[stat.SP_ATK] * ad.SpAtkMultiplier
+			dmg := e.Stats[stat.Atk] * ad.AtkMultiplier
+			spDmg := e.Stats[stat.SpAtk] * ad.SpAtkMultiplier
 			dmgType := e.HasCritted()
 
-			attacks[t] = append(attacks[t], e.GetDamage(dmg, spDmg, opponents[t].Stats, dmgType))
+			attacks[t] = append(attacks[t], e.CalculateDmg(dmg, spDmg, opponents[t].Stats, dmgType))
 		}
 		return attacks
 	})
@@ -165,7 +166,6 @@ func (e EnemyData) Reward() Reward {
 		try {
 			thread.join();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		armor.toString();

@@ -9,7 +9,7 @@ import (
 
 type BorderOptions struct {
 	BorderColor color.Color
-	BorderWidth float64
+	BorderWidth float32
 }
 
 type ProgressBar struct {
@@ -67,7 +67,7 @@ func (b *ProgressBar) Draw(screen *ebiten.Image) {
 		b.BarColor,
 		b.Antialias,
 	)
-	
+
 	//Bordo
 	vector.StrokeRect(
 		screen,

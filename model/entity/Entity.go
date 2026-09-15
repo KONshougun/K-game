@@ -1,16 +1,30 @@
 package entity
 
 import (
+	"math"
+	"math/rand"
+	"sort"
+
 	"github.com/KONshougun/K-game/game/combat/effect"
 	"github.com/KONshougun/K-game/game/combat/event"
 	"github.com/KONshougun/K-game/model"
 	"github.com/KONshougun/K-game/model/equipment/armor"
 	"github.com/KONshougun/K-game/model/equipment/weapon"
 	"github.com/KONshougun/K-game/model/stat"
-	"math"
-	"math/rand"
-	"sort"
 )
+
+type EntityType byte
+
+const(
+	Character EntityType = iota
+	Enemy
+)
+func (s EntityType) String() string {
+	return [...]string{
+		"character",
+		"enemy",
+	}[s]
+}
 
 type Entity interface {
 	GetEntity() *EntityData
@@ -20,8 +34,13 @@ type Controller interface {
 	Attack(e *EntityData, opponents []*EntityData) (map[int][]model.Damage, int)
 	GetTarget(targets []*EntityData, targetCount uint8, differentTargets, randomTargets bool) []int
 }
+
+type FightStats struct {
+	Shield, MaxHp, MaxSt, MaxMp float64
+}
 type EntityData struct {
 	Controller
+	EntityType
 
 	Level     uint8
 	MaxLvl    uint8
@@ -36,13 +55,7 @@ type EntityData struct {
 
 	Effects [event.EventCount][]effect.Effect
 	Buffs   []effect.Buff
-
-	//hp non in battaglia
-	CurrHp float32
-	//fight variables
-	MaxHp float32
-	MaxSt float32
-	MaxMp float32
+	FightStats
 }
 
 func NewEntity(name string, c Controller) *EntityData {
@@ -61,7 +74,6 @@ func NewEntity(name string, c Controller) *EntityData {
 
 func (e *EntityData) SetBaseStats(s stat.Stats) {
 	e.BaseStats = s
-	e.CurrHp = s[stat.HP]
 }
 
 func (e *EntityData) SetStatsOf(lvl uint8, baseStat stat.Stats) {
@@ -80,42 +92,38 @@ func (e *EntityData) SetStatsOf(lvl uint8, baseStat stat.Stats) {
 
 	// Somma dei moltiplicatori delle classi
 	for _, class := range e.Class {
-		EntiityClassesMultiplier[class].ForEach(func(sn stat.StatName, f float32) {
+		EntiityClassesMultiplier[class].ForEach(func(sn stat.StatName, f float64) {
 			app[stat.StatName(sn)] += f
 		})
 	}
 
 	// Media dei moltiplicatori
-	classCount := float32(len(e.Class))
-	app.ForEach(func(sn stat.StatName, value float32) {
+	classCount := float64(len(e.Class))
+	app.ForEach(func(sn stat.StatName, value float64) {
 		app[sn] = value / classCount
 	})
 	// Progressione del livello
 	exponent := float64(lvl-1) / float64(e.MaxLvl-1)
 
 	// Calcolo statistiche
-	app.ForEach(func(sn stat.StatName, f float32) {
-		e.BaseStats[sn] = baseStat[sn] * float32(math.Pow(float64(f), exponent))
+	app.ForEach(func(sn stat.StatName, f float64) {
+		e.BaseStats[sn] = baseStat[sn] * float64(math.Pow(float64(f), exponent))
 	})
 }
 
 func (e *EntityData) CalculateStats(evt event.EventData) stat.Stats {
 	var s stat.Stats
-	e.BaseStats.ForEach(func(sn stat.StatName, f float32) {
+	e.BaseStats.ForEach(func(sn stat.StatName, f float64) {
 		s[sn] = f
 	})
 
 	mainStats, subStats := e.GetEquipmentStats(evt)
-	mainStats.ForEach(func(sn stat.StatName, f float32) {
+	mainStats.ForEach(func(sn stat.StatName, f float64) {
 		s[sn] *= (100 + f) / 100
 	})
-	subStats.ForEach(func(sn stat.StatName, f float32) {
+	subStats.ForEach(func(sn stat.StatName, f float64) {
 		s[sn] += f
 	})
-
-	e.MaxHp = s[stat.HP]
-	e.MaxSt = s[stat.ST]
-	e.MaxMp = s[stat.MP]
 
 	return s
 }
@@ -127,10 +135,10 @@ func (e *EntityData) GetEquipmentStats(evt event.EventData) (stat.Stats, stat.St
 
 	if len(e.Weapons) > 0 {
 		for _, w := range e.Weapons {
-			w.MainStats.ForEach(func(sn stat.StatName, f float32) {
+			w.MainStats.ForEach(func(sn stat.StatName, f float64) {
 				mainStats[sn] += f
 			})
-			w.SubStats.ForEach(func(sn stat.StatName, f float32) {
+			w.SubStats.ForEach(func(sn stat.StatName, f float64) {
 				subStats[sn] += f
 			})
 			for _, eff := range weapon.WeaponStats[w.Set].Effect {
@@ -139,14 +147,14 @@ func (e *EntityData) GetEquipmentStats(evt event.EventData) (stat.Stats, stat.St
 				}
 			}
 		}
-		subStats[stat.ACC] /= float32(len(e.Weapons))
+		subStats[stat.Acc] /= float64(len(e.Weapons))
 	}
 
 	e.Armor.ForEach(func(ap armor.ArmorPiece) {
-		ap.MainStats.ForEach(func(sn stat.StatName, f float32) {
+		ap.MainStats.ForEach(func(sn stat.StatName, f float64) {
 			mainStats[sn] += f
 		})
-		ap.SubStats.ForEach(func(sn stat.StatName, f float32) {
+		ap.SubStats.ForEach(func(sn stat.StatName, f float64) {
 			subStats[sn] += f
 		})
 	})
@@ -160,11 +168,11 @@ func (e *EntityData) GetEquipmentStats(evt event.EventData) (stat.Stats, stat.St
 	return *mainStats, *subStats
 }
 
-func (e *EntityData) GetDamage(dmg, spDmg float32, enemyStat stat.Stats, dmgT model.DamageType) model.Damage {
+func (e *EntityData) CalculateDmg(dmg, spDmg float64, enemyStat stat.Stats, dmgT model.DamageType) model.Damage {
 	switch dmgT {
 	case model.Flat, model.Crit, model.SuperCrit:
 		dmg, spDmg = e.GetCritDmg(enemyStat, dmg, spDmg, dmgT)
-		def := enemyStat[stat.DEF] - e.Stats[stat.PRF]
+		def := enemyStat[stat.Def] - e.Stats[stat.Prf]
 		if def > 0 {
 			dmg -= def
 			if dmg < 0 {
@@ -173,7 +181,7 @@ func (e *EntityData) GetDamage(dmg, spDmg float32, enemyStat stat.Stats, dmgT mo
 		} else {
 			dmg -= def * 1.25
 		}
-		spDef := enemyStat[stat.SP_DEF] - e.Stats[stat.SP_PRF]
+		spDef := enemyStat[stat.SpDef] - e.Stats[stat.SpPrf]
 		if spDef > 0 {
 			spDmg -= spDef
 			if spDmg < 0 {
@@ -198,10 +206,27 @@ func (e *EntityData) GetDamage(dmg, spDmg float32, enemyStat stat.Stats, dmgT mo
 	}
 }
 
+func (e *EntityData) Dameged(dmg float64, dmgT model.DamageType) {
+	if e.Shield > 0 && dmgT != model.Pure {
+		e.Shield -= dmg
+		if e.Shield < 0 {
+			e.Stats[stat.Hp] += e.Shield
+			e.Shield = 0
+		}
+	} else {
+		e.Stats[stat.Hp] -= dmg
+	}
+
+}
+
 func (e *EntityData) AddBaseEvent() {
 	e.AddEffect(event.SetEntityData, effect.None, effect.Normal, func(evt event.EventData) event.EventData {
 		e.AbilitiesCdReset()
 		e.Stats = e.CalculateStats(evt)
+		e.MaxHp = e.Stats[stat.Hp]
+		e.Shield = 0
+		e.MaxSt = e.Stats[stat.St]
+		e.MaxMp = e.Stats[stat.Mp]
 		return evt
 	})
 	e.AddEffect(event.StartTurn, effect.None, effect.Normal, func(evt event.EventData) event.EventData {
@@ -218,7 +243,7 @@ func (e *EntityData) AddBaseEvent() {
 		if *(evt.GetData()[6].(*bool)) {
 			return evt
 		}
-		*(evt.GetData()[6].(*bool)) = float32(rand.Intn(100)) < e.Stats[stat.RES]
+		*(evt.GetData()[6].(*bool)) = float64(rand.Intn(100)) < e.Stats[stat.Res]
 		return evt
 	})
 }
@@ -284,13 +309,13 @@ func (e *EntityData) AbilitiesCdReset() {
 	}
 }
 func (e *EntityData) RestoreEnergy() {
-	e.Stats[stat.ST] += e.Stats[stat.ST_RG]
-	if e.Stats[stat.ST] > e.MaxSt {
-		e.Stats[stat.ST] = e.MaxSt
+	e.Stats[stat.St] += e.Stats[stat.StRg]
+	if e.Stats[stat.St] > e.MaxSt {
+		e.Stats[stat.St] = e.MaxSt
 	}
-	e.Stats[stat.MP] += e.Stats[stat.MP_RG]
-	if e.Stats[stat.MP] > e.MaxMp {
-		e.Stats[stat.MP] = e.MaxMp
+	e.Stats[stat.Mp] += e.Stats[stat.MpRg]
+	if e.Stats[stat.Mp] > e.MaxMp {
+		e.Stats[stat.Mp] = e.MaxMp
 	}
 }
 func (e *EntityData) AbilityCdReduction() {
@@ -306,7 +331,7 @@ func (e *EntityData) BuffCdReduction() {
 	}
 }
 func (e *EntityData) QtrActivasion() bool {
-	return rand.Intn(100) < int(e.Stats[stat.QTR])
+	return rand.Intn(100) < int(e.Stats[stat.Qtr])
 }
 
 //FIGHT FUNCS
@@ -326,14 +351,14 @@ func (e *EntityData) QtrActivasion() bool {
 	return atks
 }*/
 
-func (e *EntityData) HasHit(defenderStat stat.Stats, abilityAcc float32) bool {
-	return rand.Intn(100) < int(e.Stats[stat.ACC]+abilityAcc-defenderStat[stat.EVA])
+func (e *EntityData) HasHit(defenderStat stat.Stats, abilityAcc float64) bool {
+	return rand.Intn(100) < int(e.Stats[stat.Acc]+abilityAcc-defenderStat[stat.Eva])
 }
 
 func (e *EntityData) HasCritted() model.DamageType {
-	rate := float32(rand.Intn(100))
-	if rate < e.Stats[stat.CRIT_RATE] {
-		if rate*2.5 < e.Stats[stat.CRIT_RATE] {
+	rate := float64(rand.Intn(100))
+	if rate < e.Stats[stat.CritRate] {
+		if rate*2.5 < e.Stats[stat.CritRate] {
 			return model.SuperCrit
 		} else {
 			return model.Crit
@@ -342,17 +367,17 @@ func (e *EntityData) HasCritted() model.DamageType {
 	return model.Flat
 }
 
-func (e *EntityData) GetCritDmg(defenderStat stat.Stats, dmg, spDmg float32, critType model.DamageType) (float32, float32) {
-	if defenderStat[stat.CRIT_RES] >= 100 {
+func (e *EntityData) GetCritDmg(defenderStat stat.Stats, dmg, spDmg float64, critType model.DamageType) (float64, float64) {
+	if defenderStat[stat.CritRes] >= 100 {
 		panic("COGLIONE")
 	}
 	switch critType {
 	case model.Flat:
 		return dmg, spDmg
 	case model.Crit:
-		return dmg * ((1 + e.Stats[stat.CRIT_DMG]/100) * (1 - defenderStat[stat.CRIT_RES]/100)), spDmg * ((1 + e.Stats[stat.CRIT_DMG]/100) * (1 - defenderStat[stat.CRIT_RES]/100))
+		return dmg * ((1 + e.Stats[stat.CritDmg]/100) * (1 - defenderStat[stat.CritRes]/100)), spDmg * ((1 + e.Stats[stat.CritDmg]/100) * (1 - defenderStat[stat.CritRes]/100))
 	case model.SuperCrit:
-		return dmg * ((1 + e.Stats[stat.CRIT_DMG]/100) * 1.5 * (1 - defenderStat[stat.CRIT_RES]/100)), spDmg * ((1 + e.Stats[stat.CRIT_DMG]/100) * 1.5 * (1 - defenderStat[stat.CRIT_RES]/100))
+		return dmg * ((1 + e.Stats[stat.CritDmg]/100) * 1.5 * (1 - defenderStat[stat.CritRes]/100)), spDmg * ((1 + e.Stats[stat.CritDmg]/100) * 1.5 * (1 - defenderStat[stat.CritRes]/100))
 	default:
 		panic("get out")
 	}

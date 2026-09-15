@@ -20,14 +20,14 @@ type AbilityData struct {
 	DifferentTargets bool
 
 	CooldownCost  int8
-	StCost        float32
+	StCost        float64
 	StCostPercent uint8
-	MpCost        float32
+	MpCost        float64
 	MpCostPercent uint8
 	SpdCost       uint16
 
-	AtkMultiplier   float32
-	SpAtkMultiplier float32
+	AtkMultiplier   float64
+	SpAtkMultiplier float64
 	Acc             uint8
 }
 
@@ -39,11 +39,11 @@ func NewAbility(ad AbilityData, f func(opponents []*EntityData) map[int][]model.
 }
 
 func (a *Ability) CastAbility(stats *stat.Stats) {
-	stats[stat.SPD] -= float32(a.SpdCost) - stats[stat.ATK_SPD]
-	stats[stat.ST] *= (100 - float32(a.StCostPercent)) / 100
-	stats[stat.ST] -= float32(a.StCost)
-	stats[stat.MP] *= (100 - float32(a.MpCostPercent)) / 100
-	stats[stat.MP] -= float32(a.MpCost)
+	stats[stat.Spd] -= float64(a.SpdCost) - stats[stat.AtkSpd]
+	stats[stat.St] *= (100 - float64(a.StCostPercent)) / 100
+	stats[stat.St] -= float64(a.StCost)
+	stats[stat.Mp] *= (100 - float64(a.MpCostPercent)) / 100
+	stats[stat.Mp] -= float64(a.MpCost)
 	a.Cooldown = a.CooldownCost
 }
 
@@ -51,13 +51,13 @@ func (a *Ability) IsUsable(e *EntityData) (string, bool) {
 	if !a.Unlock {
 		return "Non sbloccata", false
 	}
-	if a.Cooldown >= 0{
+	if a.Cooldown >= 0 {
 		return "In ricarica", false
 	}
-	if e.Stats[stat.ST] < float32(a.StCost)+e.Stats[stat.ST]*float32(a.StCostPercent)/100 {
+	if e.Stats[stat.St] < float64(a.StCost)+e.Stats[stat.St]*float64(a.StCostPercent)/100 {
 		return "Stamina insufficiente", false
 	}
-	if e.Stats[stat.MP] < float32(a.MpCost)+e.Stats[stat.MP]*float32(a.MpCostPercent)/100 {
+	if e.Stats[stat.Mp] < float64(a.MpCost)+e.Stats[stat.Mp]*float64(a.MpCostPercent)/100 {
 		return "Mana insufficiente", false
 	}
 	return "", true

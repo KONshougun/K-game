@@ -2,12 +2,13 @@ package armor
 
 import (
 	"fmt"
-	"github.com/KONshougun/K-game/game/comm"
-	"github.com/KONshougun/K-game/model/equipment"
-	"github.com/KONshougun/K-game/model/stat"
 	"math/rand"
 	"strconv"
 	"strings"
+
+	"github.com/KONshougun/K-game/game/comm"
+	"github.com/KONshougun/K-game/model/equipment"
+	"github.com/KONshougun/K-game/model/stat"
 )
 
 type ArmorPiece struct {
@@ -43,71 +44,71 @@ func (ap *ArmorPiece) chooseMainStat() {
 	case Helmet:
 		switch {
 		case rate < 20:
-			ap.MainStats[stat.ATK] = 3
+			ap.MainStats[stat.Atk] = 3
 		case rate < 40:
-			ap.MainStats[stat.SP_ATK] = 3
+			ap.MainStats[stat.SpAtk] = 3
 		case rate < 60:
-			ap.MainStats[stat.ST] = 3
+			ap.MainStats[stat.St] = 3
 		case rate < 80:
-			ap.MainStats[stat.MP] = 3
+			ap.MainStats[stat.Mp] = 3
 		case rate < 90:
-			ap.MainStats[stat.CRIT_RATE] = 8
+			ap.MainStats[stat.CritRate] = 8
 		default:
-			ap.MainStats[stat.CRIT_DMG] = 10
+			ap.MainStats[stat.CritDmg] = 10
 		}
 	case Chest:
 		switch {
 		case rate < 30:
-			ap.MainStats[stat.HP] = 4
+			ap.MainStats[stat.Hp] = 4
 		case rate < 55:
-			ap.MainStats[stat.DEF] = 5
+			ap.MainStats[stat.Def] = 5
 		case rate < 80:
-			ap.MainStats[stat.SP_DEF] = 5
+			ap.MainStats[stat.SpDef] = 5
 		case rate < 90:
-			ap.MainStats[stat.CRIT_RATE] = 7.5
+			ap.MainStats[stat.CritRate] = 7.5
 		default:
-			ap.MainStats[stat.RES] = 25
+			ap.MainStats[stat.Res] = 25
 		}
 	case Gloves:
 		switch {
 		case rate < 30:
-			ap.MainStats[stat.ATK] = 3
+			ap.MainStats[stat.Atk] = 3
 		case rate < 60:
-			ap.MainStats[stat.SP_ATK] = 3
+			ap.MainStats[stat.SpAtk] = 3
 		case rate < 80:
-			ap.MainStats[stat.SPD] = 3
+			ap.MainStats[stat.Spd] = 3
 		case rate < 90:
-			ap.MainStats[stat.PRF] = 15
+			ap.MainStats[stat.Prf] = 15
 		default:
-			ap.MainStats[stat.SP_PRF] = 15
+			ap.MainStats[stat.SpPrf] = 15
 		}
 	case Legs:
 		switch {
 		case rate < 30:
-			ap.MainStats[stat.HP] = 4
+			ap.MainStats[stat.Hp] = 4
 		case rate < 55:
-			ap.MainStats[stat.DEF] = 5
+			ap.MainStats[stat.Def] = 5
 		case rate < 80:
-			ap.MainStats[stat.SP_DEF] = 5
+			ap.MainStats[stat.SpDef] = 5
 		case rate < 90:
-			ap.MainStats[stat.ST_RG] = 15
+			ap.MainStats[stat.StRg] = 15
 		default:
-			ap.MainStats[stat.MP_RG] = 15
+			ap.MainStats[stat.MpRg] = 15
 		}
 	case Boots:
 		switch {
 		case rate < 30:
-			ap.MainStats[stat.HP] = 4
+			ap.MainStats[stat.Hp] = 4
 		case rate < 50:
-			ap.MainStats[stat.SPD] = 3
+			ap.MainStats[stat.Spd] = 3
 		case rate < 65:
-			ap.MainStats[stat.ST] = 3
+			ap.MainStats[stat.St] = 3
 		case rate < 80:
-			ap.MainStats[stat.MP] = 3
+			ap.MainStats[stat.Mp] = 3
 		case rate < 90:
-			ap.MainStats[stat.ATK_SPD] = 5
+			ap.MainStats[stat.AtkSpd] = 5
 		default:
-			ap.MainStats[stat.EVA] = 25
+			ap.MainStats[stat.Eva] = 25
 		}
 	}
 }
@@ -143,45 +144,45 @@ func (ap *ArmorPiece) addSubStats(count uint8) {
 
 		switch {
 		case subRate < 20:
-			if ap.SubStats[stat.HP] != 0 {
+			if ap.SubStats[stat.Hp] != 0 {
 				continue
 			}
-			ap.SubStats[stat.HP] = 12
+			ap.SubStats[stat.Hp] = 12
 		case subRate < 35:
-			if ap.SubStats[stat.ATK] != 0 {
+			if ap.SubStats[stat.Atk] != 0 {
 				continue
 			}
-			ap.SubStats[stat.ATK] = 4
+			ap.SubStats[stat.Atk] = 4
 		case subRate < 50:
-			if ap.SubStats[stat.SP_ATK] != 0 {
+			if ap.SubStats[stat.SpAtk] != 0 {
 				continue
 			}
-			ap.SubStats[stat.SP_ATK] = 4
+			ap.SubStats[stat.SpAtk] = 4
 		case subRate < 60:
-			if ap.SubStats[stat.DEF] != 0 {
+			if ap.SubStats[stat.Def] != 0 {
 				continue
 			}
-			ap.SubStats[stat.DEF] = 1.5
+			ap.SubStats[stat.Def] = 1.5
 		case subRate < 70:
-			if ap.SubStats[stat.SP_DEF] != 0 {
+			if ap.SubStats[stat.SpDef] != 0 {
 				continue
 			}
-			ap.SubStats[stat.SP_DEF] = 1.5
+			ap.SubStats[stat.SpDef] = 1.5
 		case subRate < 80:
-			if ap.SubStats[stat.SPD] != 0 {
+			if ap.SubStats[stat.Spd] != 0 {
 				continue
 			}
-			ap.SubStats[stat.SPD] = 15
+			ap.SubStats[stat.Spd] = 15
 		case subRate < 90:
-			if ap.SubStats[stat.ST] != 0 {
+			if ap.SubStats[stat.St] != 0 {
 				continue
 			}
-			ap.SubStats[stat.ST] = 3
+			ap.SubStats[stat.St] = 3
 		default:
-			if ap.SubStats[stat.MP] != 0 {
+			if ap.SubStats[stat.Mp] != 0 {
 				continue
 			}
-			ap.SubStats[stat.MP] = 3
+			ap.SubStats[stat.Mp] = 3
 		}
 		count--
 	}
@@ -214,7 +215,7 @@ func (ap *ArmorPiece) Upgrade() (ArmorPiece, error) {
 
 func (ap ArmorPiece) getRandSubKey() stat.StatName {
 	keys := make([]stat.StatName, 0, ap.SubStats.Len())
-	ap.SubStats.ForEach(func(sn stat.StatName, _ float32) {
+	ap.SubStats.ForEach(func(sn stat.StatName, _ float64) {
 
 		keys = append(keys, sn)
 	})
@@ -242,7 +243,7 @@ func (ap ArmorPiece) String() string {
 
 	//MAIN STAT
 	str.WriteString(comm.Yellow.Write("\nMain stat: \n"))
-	ap.MainStats.ForEach(func(sn stat.StatName, _ float32) {
+	ap.MainStats.ForEach(func(sn stat.StatName, _ float64) {
 		str.Write([]byte(comm.Cyan.Write(sn.String() + ": ")))
 		str.Write([]byte(strconv.FormatFloat(float64(ap.MainStats[sn]), 'f', -1, 32)))
 		str.WriteString("\n")
@@ -250,7 +251,7 @@ func (ap ArmorPiece) String() string {
 
 	//SUB STAT
 	str.WriteString(comm.Yellow.Write("Substats: \n"))
-	ap.SubStats.ForEach(func(sn stat.StatName, _ float32) {
+	ap.SubStats.ForEach(func(sn stat.StatName, _ float64) {
 		str.Write([]byte(comm.Cyan.Write(sn.String() + ": ")))
 		str.Write([]byte(strconv.FormatFloat(float64(ap.SubStats[sn]), 'f', -1, 32)))
 		str.WriteString("\n")
