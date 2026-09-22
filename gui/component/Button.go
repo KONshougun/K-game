@@ -61,7 +61,11 @@ func (b *Button) Update() error {
 
 func (b *Button) Draw(screen *ebiten.Image) {
 
+	//fmt.Printf("b.getState(): %v\n", b.getState())
 	img := b.State[b.getState()]
+	if img == nil {
+		img = b.State[Normal]
+	}
 	imgBounds := img.Bounds()
 	scaleX := float64(b.Area.Width) / float64(imgBounds.Dx())
 	scaleY := float64(b.Area.Height) / float64(imgBounds.Dy())

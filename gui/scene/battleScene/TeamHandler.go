@@ -1,7 +1,6 @@
 package battlescene
 
 import (
-	"github.com/KONshougun/K-game/gui"
 	"github.com/KONshougun/K-game/gui/component"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -9,7 +8,7 @@ import (
 
 type TeamView struct {
 	*component.Component
-	Entities []*gui.EntityView
+	Entities []*EntityView
 }
 
 func NewTeamView() *TeamView {

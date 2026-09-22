@@ -15,14 +15,15 @@ import (
 
 type EntityType byte
 
-const(
+const (
 	Character EntityType = iota
 	Enemy
 )
+
 func (s EntityType) String() string {
 	return [...]string{
-		"character",
-		"enemy",
+		"Character",
+		"Enemy",
 	}[s]
 }
 

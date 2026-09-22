@@ -1,12 +1,14 @@
 package component
 
 import (
+	"bytes"
+	"fmt"
 	"image/color"
-
-	"github.com/KONshougun/K-game/gui/handler"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"golang.org/x/text/language"
 )
 
 type Size byte
@@ -42,7 +44,7 @@ func NewLabel(str string, c color.Color, size Size, space LineSpacing, horizonta
 		Component: NewComponent(area),
 
 		Text: str,
-		Face: handler.LoadFont(handler.NotoSerif, float64(size)),
+		Face: LoadFont(NotoSerif, float64(size)),
 		Layout: &text.DrawOptions{
 			LayoutOptions: text.LayoutOptions{
 				LineSpacing:    float64(space),
@@ -98,6 +100,7 @@ func (l *Label) fitText() string {
 		return suffix
 	}
 
+	fmt.Println("ciao")
 	return ""
 }
 
@@ -105,4 +108,30 @@ func colorScale(c color.Color) ebiten.ColorScale {
 	var scale ebiten.ColorScale
 	scale.ScaleWithColor(c)
 	return scale
+}
+
+//FONT
+
+type Font string
+
+const (
+	NotoSerif = "asset/ui/font/NotoSerif.ttf"
+)
+
+func LoadFont(font Font, size float64) text.Face {
+	data, err := os.ReadFile(string(font))
+	if err != nil {
+		panic(err)
+	}
+
+	source, err := text.NewGoTextFaceSource(bytes.NewReader(data))
+	if err != nil {
+		panic(err)
+	}
+
+	return &text.GoTextFace{
+		Source:   source,
+		Language: language.Italian,
+		Size:     size,
+	}
 }

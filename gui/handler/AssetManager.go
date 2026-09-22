@@ -6,7 +6,7 @@ import (
 	"image"
 	"os"
 
-	"github.com/KONshougun/K-game/model/entity"
+	"github.com/KONshougun/K-game/game/comm/area"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -31,15 +31,15 @@ func (a *AssetManager) Get(path string) *ebiten.Image {
 func LoadImage(path string) *ebiten.Image {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil
+		panic(fmt.Sprintf("Immagine non trovata: %s", path))
 	}
 
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return nil
+		panic(err)
 	}
 	return ebiten.NewImageFromImage(img)
 }
-func GetAvatar(name string, entityT entity.EntityType) *ebiten.Image {
-	return LoadImage(fmt.Sprintf("asset/entity/%s/avatar/%s.png", entityT.String(), name))
+func GetCombatBackground(area area.AreaId) *ebiten.Image {
+	return LoadImage(fmt.Sprintf("asset/background/area/%s.png", area.String()))
 }

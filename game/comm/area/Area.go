@@ -62,3 +62,11 @@ func (a *Area) GetEffectsOrdered(ev event.EventType) []effect.Effect {
 
 	return effect
 }
+
+func (i AreaId) String() string {
+	return [...]string{
+		"Inventory",
+		"Castle",
+		"Plains",
+	}[i]
+}
