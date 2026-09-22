@@ -15,9 +15,9 @@ type Bandit struct {
 
 func NewBandit(lvl uint8, w *weapon.Weapon, a *armor.Armor) *Bandit {
 	b := &Bandit{
-		EnemyData: enemy.NewEnemy(enemy.Bandito, []adventure.Item{}),
+		EnemyData: enemy.NewEnemy(enemy.Bandit, []adventure.Item{}),
 	}
-	b.EnemyName = enemy.Bandito
+	b.EnemyName = enemy.Bandit
 	b.SetBaseStats(enemy.EnemiesBaseStats[b.EnemyName])
 	b.setAbilities()
 	b.SetLevel(lvl)

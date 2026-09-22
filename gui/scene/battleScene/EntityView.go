@@ -1,11 +1,10 @@
 package battlescene
 
 import (
-	"image/color"
 	"math"
 
 	"github.com/KONshougun/K-game/gui/component"
-	"github.com/KONshougun/K-game/gui/handler"
+	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/KONshougun/K-game/model/entity"
 	"github.com/KONshougun/K-game/model/stat"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -27,9 +26,10 @@ func NewEntityView(data *entity.EntityData, area component.Area) *EntityView {
 	return &EntityView{
 		Component: component.NewComponent(area),
 		Data:      data,
-		Avatar:    handler.GetAvatar(data.Name, data.EntityType),
+		Avatar:    guihandler.GetAvatar(data.Name, data.EntityType),
 		HealthBar: *component.NewProgressBar(&data.Stats[stat.Hp], &data.MaxHp, component.HealthBar,
-			component.BorderOptions{BorderColor: color.White, BorderWidth: area.Width * 0.005},
+			component.BorderOptions{},
+			//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Width * 0.005},
 			component.Area{
 				X:      area.X + area.Width*0.05,
 				Y:      area.Y + area.Height*0.05,
@@ -38,19 +38,21 @@ func NewEntityView(data *entity.EntityData, area component.Area) *EntityView {
 			},
 		),
 		StaminaBar: *component.NewProgressBar(&data.Stats[stat.St], &data.MaxSt, component.StaminaBar,
-			component.BorderOptions{BorderColor: color.White, BorderWidth: area.Width * 0.005},
+			component.BorderOptions{},
+			//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Width * 0.005},
 			component.Area{
 				X:      area.X + area.Width*0.05,
-				Y:      area.Y + area.Height*0.0925,
+				Y:      area.Y + area.Height*0.09,
 				Width:  area.Width * 0.90,
 				Height: area.Height * 0.02,
 			},
 		),
 		ManaBar: *component.NewProgressBar(&data.Stats[stat.Mp], &data.MaxMp, component.ManaBar,
-			component.BorderOptions{BorderColor: color.White, BorderWidth: area.Width * 0.005},
+			component.BorderOptions{},
+			//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Width * 0.005},
 			component.Area{
 				X:      area.X + area.Width*0.05,
-				Y:      area.Y + area.Height*0.115,
+				Y:      area.Y + area.Height*0.11,
 				Width:  area.Width * 0.90,
 				Height: area.Height * 0.02,
 			},

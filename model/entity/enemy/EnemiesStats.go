@@ -5,7 +5,7 @@ import "github.com/KONshougun/K-game/model/stat"
 type EnemyName uint16
 
 const (
-	Bandito EnemyName = iota
+	Bandit EnemyName = iota
 	Lupo
 	Goblin
 	Scheletro
@@ -25,7 +25,7 @@ const (
 )
 
 var EnemiesBaseStats = map[EnemyName]stat.Stats{
-	Bandito: {
+	Bandit: {
 		stat.Hp:       100,
 		stat.Atk:      25,
 		stat.SpAtk:    15,
@@ -51,7 +51,7 @@ var EnemiesBaseStats = map[EnemyName]stat.Stats{
 
 func (e EnemyName) String() string {
 	return [...]string{
-		"Bandito",
+		"Bandit",
 		"Lupo",
 		"Goblin",
 		"Scheletro",

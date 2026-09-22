@@ -5,7 +5,7 @@ import (
 	"image/color"
 
 	"github.com/KONshougun/K-game/gui/component"
-	"github.com/KONshougun/K-game/gui/handler"
+	"github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/KONshougun/K-game/model/entity"
 	"github.com/KONshougun/K-game/model/stat"
 
@@ -32,8 +32,8 @@ func NewActionMenu(data *entity.EntityData, abilitiesState []bool, area componen
 	p := &ActionPanel{
 		Component:  component.NewComponent(area),
 		Data:       data,
-		Icon:       handler.GetIcon(data.Name, data.EntityType),
-		Background: component.NewBackground(handler.LoadImage("asset/background/ui/Action_Background.png"), area),
+		Icon:       guihandler.GetIcon(data.Name, data.EntityType),
+		Background: component.NewBackground(guihandler.LoadImage("asset/background/ui/Action_Background.png"), area),
 
 		HealthBar: component.NewProgressBar(&data.Stats[stat.Hp], &data.MaxHp, component.HealthBar,
 			component.BorderOptions{},
@@ -88,7 +88,7 @@ func NewActionMenu(data *entity.EntityData, abilitiesState []bool, area componen
 			}),
 	}
 	p.AbilityBtns = make([]*component.Button, len(data.Abilities))
-	imgs := handler.GetAbilities(data.Name, data.EntityType, len(data.Abilities))
+	imgs := guihandler.GetAbilities(data.Name, data.EntityType, len(data.Abilities))
 	for i := range len(p.AbilityBtns) {
 		p.AbilityBtns[i] = component.NewButton([4]*ebiten.Image{
 			component.Normal: imgs[i],
@@ -107,20 +107,6 @@ func NewActionMenu(data *entity.EntityData, abilitiesState []bool, area componen
 }
 
 func (p *ActionPanel) Update() error {
-	/*
-		p.Data.Stats[stat.Hp]--
-		p.Data.Stats[stat.St]--
-		p.Data.Stats[stat.Mp]--
-		if p.Data.Stats[stat.Hp] <= 0 {
-			p.Data.Stats[stat.Hp] = p.Data.MaxHp
-		}
-		if p.Data.Stats[stat.St] <= 0 {
-			p.Data.Stats[stat.St] = p.Data.MaxSt
-		}
-		if p.Data.Stats[stat.Mp] <= 0 {
-			p.Data.Stats[stat.Mp] = p.Data.MaxMp
-		}
-	*/
 	p.Background.Update()
 	for _, btn := range p.AbilityBtns {
 		btn.Update()
