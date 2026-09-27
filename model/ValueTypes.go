@@ -10,8 +10,17 @@ const (
 	Miss
 )
 
+type DamageTarget byte
+
+const (
+	Normal DamageTarget = iota
+	Health
+	ShieldPenetration
+)
+
 type SourceType byte
-const(
+
+const (
 	Ability SourceType = iota
 	Passive
 	Effect

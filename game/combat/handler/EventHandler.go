@@ -59,10 +59,11 @@ type DamageDealt struct {
 	Target    *entity.EntityData
 	Amount    float64
 	DmgType   model.DamageType
+	DmgTarget model.DamageTarget
 }
 
 func (e *DamageDealt) GetData() []any {
-	return []any{e.Team, e.Opponents, e.Area, &e.Target, &e.Amount, &e.DmgType}
+	return []any{e.Team, e.Opponents, e.Area, &e.Target, &e.Amount, &e.DmgType, &e.DmgTarget}
 }
 func (DamageDealt) Type() event.EventType { return event.DamageDealt }
 
@@ -73,10 +74,11 @@ type DamageTaken struct {
 	Actor     *entity.EntityData
 	Amount    float64
 	DmgType   model.DamageType
+	DmgTarget model.DamageTarget
 }
 
 func (e *DamageTaken) GetData() []any {
-	return []any{e.Team, e.Opponents, e.Area, e.Actor, &e.Amount, &e.DmgType}
+	return []any{e.Team, e.Opponents, e.Area, e.Actor, &e.Amount, &e.DmgType, &e.DmgTarget}
 }
 func (DamageTaken) Type() event.EventType { return event.DamageTaken }
 

@@ -207,7 +207,7 @@ func (e *EntityData) CalculateDmg(dmg, spDmg float64, enemyStat stat.Stats, dmgT
 	}
 }
 
-func (e *EntityData) Dameged(dmg float64, dmgT model.DamageType) {
+func (e *EntityData) Dameged(dmg float64, dmgT model.DamageType, dmgTarget model.DamageTarget) {
 	if e.Shield > 0 && dmgT != model.Pure {
 		e.Shield -= dmg
 		if e.Shield < 0 {

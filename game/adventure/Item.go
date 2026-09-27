@@ -13,8 +13,6 @@ const (
 	PozioniCuraMedie
 	PozioniCureGrandi
 	PozioniXp
-	LampadaDjinn
-	CuoreDelMare
 
 	ItemCount
 )
@@ -33,6 +31,20 @@ func (i Item) String() string {
 		"Pozioni curative medie",
 		"Pozioni curative grandi",
 		"Pozioni xp",
+	}[i]
+}
+
+type UniqueItem byte
+
+const (
+	LampadaDjinn UniqueItem = iota
+	CuoreDelMare
+
+	UniqueItemCount
+)
+
+func (i UniqueItem) String() string {
+	return [...]string{
 		"Lampada del djinn",
 		"Cuore del mare",
 	}[i]

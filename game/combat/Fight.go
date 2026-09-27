@@ -17,8 +17,7 @@ import (
 	"github.com/KONshougun/K-game/model/stat"
 )
 
-func InitBattle(characters []character.Character, enemies []enemy.Enemy) {
-
+func NewBattle(characters []character.Character, enemies []enemy.Enemy) bool {
 	team := make([]*entity.EntityData, len(characters))
 	for i := range characters {
 		team[i] = characters[i].GetCharacter().GetEntity()
@@ -36,10 +35,10 @@ func InitBattle(characters []character.Character, enemies []enemy.Enemy) {
 		})
 	}
 
-	Fight(team, opponents, area.Area{Id: area.Plains})
+	return Fight(team, opponents, area.Area{Id: area.Plains})
 }
 
-func Fight(team, opponents []*entity.EntityData, area area.Area) {
+func Fight(team, opponents []*entity.EntityData, area area.Area) bool {
 
 	triggerEvent(event.StartFight, team, opponents, area, effect.None, &handler.StartFight{
 		Team:      team,
@@ -61,8 +60,9 @@ func Fight(team, opponents []*entity.EntityData, area area.Area) {
 			Team: team,
 			Area: area.Id,
 		})
+		return true
 	} else {
-		panic("YOU LOOSE!!!")
+		return false
 	}
 }
 func attack(team, opponents []*entity.EntityData, area area.Area, actorIdx int) ([]*entity.EntityData, []*entity.EntityData) {
@@ -95,6 +95,7 @@ qtrTrigged:
 		actor.Stats[stat.Spd] -= 500 + actor.Stats[stat.AtkSpd]
 	}
 
+	//TODO FORSE è RIMOVIBILE
 	for i := range targets {
 		for j := range targets[i] {
 			actor.TriggerEffects(event.DamageDealt, effect.Before, &handler.DamageDealt{
@@ -130,7 +131,8 @@ qtrTrigged:
 				panic("sega")
 			}
 			opponents[i].Stats[stat.Hp] -= targets[i][j].Amount
-			opponents[i].Dameged(targets[i][j].Amount, targets[i][j].DmgType)
+			//TODO ERRORE NEL CHIAMARE LA FUNZIONE
+			opponents[i].Dameged(targets[i][j].Amount, targets[i][j].DmgType, model.Normal)
 
 			fmt.Printf(comm.Cyan.Write(actor.Name)+" ha inflitto %v a "+opponents[i].Name+"\n", targets[i][j].Amount)
 

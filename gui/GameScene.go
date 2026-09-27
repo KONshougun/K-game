@@ -15,23 +15,30 @@ const (
 	GameHeight = 720
 )
 
-type Game struct {
-	Scene Scene
+type GameStruct struct {
+	Scenes []Scene
 }
 
-// FUNZIONE DI TESTING
-func NewGame(scene Scene) *Game {
-	return &Game{Scene: scene}
+var Game GameStruct
+
+func NewGame(scene Scene) {
+	Game.Scenes = append(Game.Scenes, scene)
+
+	ebiten.SetWindowSize(1280, 720)
+	ebiten.SetWindowTitle("Gioco")
+
+	ebiten.SetFullscreen(true)
+	ebiten.RunGame(&Game)
 }
 
-func (g *Game) Update() error {
-	return g.Scene.Update()
+func (g *GameStruct) Update() error {
+	return g.Scenes[len(g.Scenes)-1].Update()
 }
 
-func (g *Game) Draw(screen *ebiten.Image) {
-	g.Scene.Draw(screen)
+func (g *GameStruct) Draw(screen *ebiten.Image) {
+	g.Scenes[len(g.Scenes)-1].Draw(screen)
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+func (g *GameStruct) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return GameWidth, GameHeight
 }

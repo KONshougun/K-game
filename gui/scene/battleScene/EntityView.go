@@ -27,9 +27,7 @@ func NewEntityView(data *entity.EntityData, area component.Area) *EntityView {
 		Component: component.NewComponent(area),
 		Data:      data,
 		Avatar:    guihandler.GetAvatar(data.Name, data.EntityType),
-		HealthBar: *component.NewProgressBar(&data.Stats[stat.Hp], &data.MaxHp, component.HealthBar,
-			component.BorderOptions{},
-			//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Width * 0.005},
+		HealthBar: *component.NewProgressBar(component.HealthBar, component.BorderOptions{},
 			component.Area{
 				X:      area.X + area.Width*0.05,
 				Y:      area.Y + area.Height*0.05,
@@ -37,9 +35,7 @@ func NewEntityView(data *entity.EntityData, area component.Area) *EntityView {
 				Height: area.Height * 0.04,
 			},
 		),
-		StaminaBar: *component.NewProgressBar(&data.Stats[stat.St], &data.MaxSt, component.StaminaBar,
-			component.BorderOptions{},
-			//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Width * 0.005},
+		StaminaBar: *component.NewProgressBar(component.StaminaBar, component.BorderOptions{},
 			component.Area{
 				X:      area.X + area.Width*0.05,
 				Y:      area.Y + area.Height*0.09,
@@ -47,9 +43,7 @@ func NewEntityView(data *entity.EntityData, area component.Area) *EntityView {
 				Height: area.Height * 0.02,
 			},
 		),
-		ManaBar: *component.NewProgressBar(&data.Stats[stat.Mp], &data.MaxMp, component.ManaBar,
-			component.BorderOptions{},
-			//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Width * 0.005},
+		ManaBar: *component.NewProgressBar(component.ManaBar, component.BorderOptions{},
 			component.Area{
 				X:      area.X + area.Width*0.05,
 				Y:      area.Y + area.Height*0.11,
@@ -61,6 +55,7 @@ func NewEntityView(data *entity.EntityData, area component.Area) *EntityView {
 }
 
 func (e *EntityView) Update() error {
+	
 	if err := e.HealthBar.Update(); err != nil {
 		return err
 	}
@@ -88,6 +83,7 @@ func (e *EntityView) Draw(screen *ebiten.Image) {
 	screen.DrawImage(e.Avatar, &opts)
 
 	//HP/SHIELD
+	e.HealthBar.Ratio = e.Data.Stats[stat.Hp] / e.Data.MaxHp
 	e.HealthBar.Draw(screen)
 	app := e.Data.Shield / e.Data.MaxHp
 	if app > 1 {
@@ -104,6 +100,8 @@ func (e *EntityView) Draw(screen *ebiten.Image) {
 	)
 
 	//ST/MP
+	e.StaminaBar.Ratio = e.Data.Stats[stat.St] / e.Data.MaxSt
 	e.StaminaBar.Draw(screen)
+	e.ManaBar.Ratio = e.Data.Stats[stat.Mp] / e.Data.MaxMp
 	e.ManaBar.Draw(screen)
 }

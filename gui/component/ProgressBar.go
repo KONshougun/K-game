@@ -25,8 +25,7 @@ type BorderOptions struct {
 type ProgressBar struct {
 	*Component
 
-	CurrValue *float64
-	MaxValue  *float64
+	Ratio float64
 
 	Border          BorderOptions
 	BackgroundColor color.Color
@@ -34,14 +33,9 @@ type ProgressBar struct {
 	BarType
 }
 
-func NewProgressBar(value, maxValue *float64, t BarType, border BorderOptions, area Area) *ProgressBar {
-	if *value > *maxValue {
-		panic("Pozza ingroppase")
-	}
+func NewProgressBar(t BarType, border BorderOptions, area Area) *ProgressBar {
 	return &ProgressBar{
 		Component:       NewComponent(area),
-		CurrValue:       value,
-		MaxValue:        maxValue,
 		BackgroundColor: color.Black,
 		BarType:         t,
 		Border:          border,
@@ -52,11 +46,10 @@ func (b *ProgressBar) Update() error {
 	return nil
 }
 func (b *ProgressBar) Draw(screen *ebiten.Image) {
-	ratio := *b.CurrValue / *b.MaxValue
-	if ratio > 1 {
-		ratio = 1
+	if b.Ratio > 1 {
+		b.Ratio = 1
 	}
-	b.BarColor = GetBarColor(b.BarType, ratio)
+	b.BarColor = GetBarColor(b.BarType, b.Ratio)
 	// Sfondo
 	vector.FillRect(
 		screen,
@@ -73,7 +66,7 @@ func (b *ProgressBar) Draw(screen *ebiten.Image) {
 		screen,
 		float32(b.X),
 		float32(b.Y),
-		float32(b.Width*ratio),
+		float32(b.Width*b.Ratio),
 		float32(b.Height),
 		b.BarColor,
 		false,

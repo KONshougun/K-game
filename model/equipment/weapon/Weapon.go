@@ -17,14 +17,14 @@ type Weapon struct {
 	Set  WeaponSet
 }
 
-func NewWeapon(wType WeaponType, set WeaponSet) Weapon {
+func NewWeapon(wType WeaponType, set WeaponSet) *Weapon {
 	w := Weapon{
 		Type: wType,
 		Set:  set,
 	}
 
 	w.setWeaponStats()
-	return w
+	return &w
 }
 
 func (w *Weapon) chooseRarity() {
@@ -38,7 +38,7 @@ func (w *Weapon) chooseRarity() {
 		w.Rarity = 3
 	}
 }
-func (w *Weapon) upgrade() Weapon {
+func (w *Weapon) Upgrade() Weapon {
 	if w.MaxLvlReached {
 		panic("Level massimo già raggiunto")
 	}

@@ -35,8 +35,7 @@ func NewActionMenu(data *entity.EntityData, abilitiesState []bool, area componen
 		Icon:       guihandler.GetIcon(data.Name, data.EntityType),
 		Background: component.NewBackground(guihandler.LoadImage("asset/background/ui/Action_Background.png"), area),
 
-		HealthBar: component.NewProgressBar(&data.Stats[stat.Hp], &data.MaxHp, component.HealthBar,
-			component.BorderOptions{},
+		HealthBar: component.NewProgressBar(component.HealthBar,component.BorderOptions{},
 			//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Height * 0.0015},
 			component.Area{
 				X:      area.X + area.Width*0.20,
@@ -52,8 +51,7 @@ func NewActionMenu(data *entity.EntityData, abilitiesState []bool, area componen
 				Width:  area.Width * 0.10,
 				Height: area.Height * 0.07,
 			}),
-		StaminaBar: component.NewProgressBar(&data.Stats[stat.St], &data.MaxSt, component.StaminaBar,
-			component.BorderOptions{},
+		StaminaBar: component.NewProgressBar(component.StaminaBar,component.BorderOptions{},
 			//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Height * 0.0015},
 			component.Area{
 				X:      area.X + area.Width*0.20,
@@ -69,8 +67,7 @@ func NewActionMenu(data *entity.EntityData, abilitiesState []bool, area componen
 				Width:  area.Width * 0.10,
 				Height: area.Height * 0.055,
 			}),
-		ManaBar: component.NewProgressBar(&data.Stats[stat.Mp], &data.MaxMp, component.ManaBar,
-			component.BorderOptions{},
+		ManaBar: component.NewProgressBar(component.ManaBar,component.BorderOptions{},
 			//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Height * 0.0015},
 			component.Area{
 				X:      area.X + area.Width*0.20,
@@ -136,6 +133,7 @@ func (p *ActionPanel) Draw(screen *ebiten.Image) {
 
 	//Bars
 	p.HealthLabel.Text = fmt.Sprintf("%v/%v Hp", int(p.Data.Stats[stat.Hp]), int(p.Data.MaxHp))
+	p.HealthBar.Ratio = p.Data.Stats[stat.Hp] / p.Data.MaxHp
 	p.HealthLabel.Draw(screen)
 	p.HealthBar.Draw(screen)
 	//Shield
@@ -154,10 +152,12 @@ func (p *ActionPanel) Draw(screen *ebiten.Image) {
 	)
 
 	p.StaminaLabel.Text = fmt.Sprintf("%v/%v St", int(p.Data.Stats[stat.St]), int(p.Data.MaxSt))
+	p.StaminaBar.Ratio = p.Data.Stats[stat.St] / p.Data.MaxSt
 	p.StaminaLabel.Draw(screen)
 	p.StaminaBar.Draw(screen)
 
 	p.ManaLabel.Text = fmt.Sprintf("%v/%v Mp", int(p.Data.Stats[stat.Mp]), int(p.Data.MaxMp))
+	p.ManaBar.Ratio = p.Data.Stats[stat.Mp] / p.Data.MaxMp
 	p.ManaLabel.Draw(screen)
 	p.ManaBar.Draw(screen)
 

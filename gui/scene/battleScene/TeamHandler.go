@@ -24,15 +24,15 @@ func NewTeamView(team []*entity.EntityData, area component.Area) *TeamView {
 		switch team[i].EntityType {
 		case entity.Character:
 			t.TeamAvatar[i] = NewEntityView(team[i], component.Area{
-				X:      area.X + area.Width/4*float64(i),
-				Y:      area.Y,
+				X:      area.X + area.Width - area.Width/4*float64(i+1),
+				Y:      area.Y + area.Width/4,
 				Width:  area.Width / 4,
 				Height: area.Width / 2,
 			})
 		case entity.Enemy:
 			t.TeamAvatar[i] = NewEntityView(team[i], component.Area{
-				X:      area.X + area.Width - area.Width/4*float64(i+1),
-				Y:      area.Y,
+				X:      area.X + area.Width - area.Width/4*float64(4-i),
+				Y:      area.Y + area.Width/4,
 				Width:  area.Width / 4,
 				Height: area.Width / 2,
 			})
@@ -42,6 +42,9 @@ func NewTeamView(team []*entity.EntityData, area component.Area) *TeamView {
 }
 
 func (t *TeamView) Update() error {
+	for _, a := range t.TeamAvatar {
+		a.Update()
+	}
 	return nil
 }
 func (t *TeamView) Draw(screen *ebiten.Image) {

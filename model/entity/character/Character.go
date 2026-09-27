@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"slices"
 
+	//"github.com/KONshougun/K-game/game/combat/handler"
 	"github.com/KONshougun/K-game/game/comm"
 	"github.com/KONshougun/K-game/model"
 	"github.com/KONshougun/K-game/model/entity"
@@ -49,7 +50,7 @@ func NewCharacter(name CharacterName, a *armor.Armor, w *weapon.Weapon, wt weapo
 		c.Weapons = append(c.Weapons, w)
 	} else {
 		w := weapon.NewWeapon(wt, weapon.Std)
-		c.Weapons = append(c.Weapons, &w)
+		c.Weapons = append(c.Weapons, w)
 	}
 	if a != nil {
 		c.Armor = *a
@@ -178,35 +179,3 @@ func (c *CharacterData) UnlockPassive(i int) {
 	c.Passives[i].Unlock = true
 	c.AddEffect(c.Passives[i].Effect.Event, c.Passives[i].Effect.Trigger, c.Passives[i].Effect.Priority, c.Passives[i].Effect.Activate)
 }
-
-/*
-	public void printCharacter() {
-		Common.clear();
-
-		Thread thread =new Thread(()->statsApplication(false));
-		thread.start();
-
-		Common.print(nome, COLORS.cyan);
-		System.out.println(Common.getPrint("\nLivello: ", COLORS.brightCyan)+livello);
-
-		try {
-			thread.join();
-		} catch (InterruptedException e) {
-			c.printStackTrace();
-		}
-		armor.toString();
-		weapon.toString();
-		Common.print("\nStatistiche:", COLORS.yellow);
-		for(int i=0; i<statistiche.getLength();i++) {
-			System.out.println(Common.getPrint(STATS_NAMES.get(i).toString(), COLORS.brightYellow)+": "+(int)statistiche.get(i));
-		}
-		Common.pause();
-		Common.clear();
-	}
-	@Override
-	public String toString() {
-		return Common.getPrint(nome, COLORS.cyan)+super.toString();
-	}
-}
-
-*/

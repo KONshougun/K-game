@@ -27,10 +27,10 @@ func NewBandit(lvl uint8, w *weapon.Weapon, a *armor.Armor) *Bandit {
 		switch {
 		case weaponRate < 60:
 			w := weapon.NewWeapon(weapon.Sword, weapon.Std)
-			b.Weapons = append(b.Weapons, &w)
+			b.Weapons = append(b.Weapons, w)
 		default:
 			w := weapon.NewWeapon(weapon.Bow, weapon.Std)
-			b.Weapons = append(b.Weapons, &w)
+			b.Weapons = append(b.Weapons, w)
 		}
 	} else {
 		b.Weapons = append(b.Weapons, w)

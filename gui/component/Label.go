@@ -2,7 +2,6 @@ package component
 
 import (
 	"bytes"
-	"fmt"
 	"image/color"
 	"os"
 
@@ -24,11 +23,11 @@ const (
 type LineSpacing byte
 
 const (
-	NoneSpace LineSpacing = iota
-	SmallSpace
-	NormalSpace
-	LargeSpace
-	VeryLargeSpace
+	NoneSpace      LineSpacing = 0
+	SmallSpace     LineSpacing = 8
+	NormalSpace    LineSpacing = 16
+	LargeSpace     LineSpacing = 24
+	VeryLargeSpace LineSpacing = 32
 )
 
 type Label struct {
@@ -68,7 +67,7 @@ func (l *Label) Draw(screen *ebiten.Image) {
 	text.Draw(screen, str, l.Face, l.Layout)
 }
 
-func (l *Label) fitText() string {
+/*func (l *Label) fitText() string {
 	str := []rune(l.Text)
 	suffix := "..."
 
@@ -101,6 +100,47 @@ func (l *Label) fitText() string {
 	}
 
 	fmt.Println("ciao")
+	return ""
+}*/
+
+func (l *Label) fitText() string {
+	const suffix = "..."
+
+	fits := func(s string) bool {
+		w, h := text.Measure(
+			s,
+			l.Face,
+			l.Layout.LineSpacing,
+		)
+
+		return w <= l.Width && h <= l.Height
+	}
+
+	if fits(l.Text) {
+		return l.Text
+	}
+
+	str := []rune(l.Text)
+
+	for len(str) > 0 {
+		// Evita che il testo finisca con un newline prima di "..."
+		if str[len(str)-1] == '\n' {
+			str = str[:len(str)-1]
+		}
+
+		candidate := string(str) + suffix
+
+		if fits(candidate) {
+			return candidate
+		}
+
+		str = str[:len(str)-1]
+	}
+
+	if fits(suffix) {
+		return suffix
+	}
+
 	return ""
 }
 

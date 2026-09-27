@@ -61,22 +61,23 @@ func (b *Button) Update() error {
 
 func (b *Button) Draw(screen *ebiten.Image) {
 
-	//fmt.Printf("b.getState(): %v\n", b.getState())
-	img := b.State[b.getState()]
-	if img == nil {
-		img = b.State[Normal]
-	}
-	imgBounds := img.Bounds()
-	scaleX := float64(b.Area.Width) / float64(imgBounds.Dx())
-	scaleY := float64(b.Area.Height) / float64(imgBounds.Dy())
+	if b.State != [4]*ebiten.Image{nil, nil, nil, nil} {
+		img := b.State[b.getState()]
+		if img == nil {
+			img = b.State[Normal]
+		}
+		imgBounds := img.Bounds()
+		scaleX := float64(b.Area.Width) / float64(imgBounds.Dx())
+		scaleY := float64(b.Area.Height) / float64(imgBounds.Dy())
 
-	opts := ebiten.DrawImageOptions{}
-	opts.GeoM.Scale(scaleX, scaleY)
-	opts.GeoM.Translate(
-		float64(b.Area.X),
-		float64(b.Area.Y),
-	)
-	screen.DrawImage(img, &opts)
+		opts := ebiten.DrawImageOptions{}
+		opts.GeoM.Scale(scaleX, scaleY)
+		opts.GeoM.Translate(
+			float64(b.Area.X),
+			float64(b.Area.Y),
+		)
+		screen.DrawImage(img, &opts)
+	}
 
 	if b.Label != nil {
 		b.Label.Draw(screen)
