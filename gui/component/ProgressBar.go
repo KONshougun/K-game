@@ -4,6 +4,8 @@ import (
 	"image/color"
 	"math"
 
+	"github.com/KONshougun/K-game/model/entity"
+	"github.com/KONshougun/K-game/model/stat"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -12,7 +14,6 @@ type BarType byte
 
 const (
 	HealthBar BarType = iota
-	ShieldBar
 	StaminaBar
 	ManaBar
 )
@@ -23,33 +24,66 @@ type BorderOptions struct {
 }
 
 type ProgressBar struct {
-	*Component
+	*ComponentData
 
-	Ratio float64
+	MaxValue  *float64
+	CurrValue map[*float64][]color.NRGBA
 
 	Border          BorderOptions
 	BackgroundColor color.Color
-	BarColor        color.Color
+	//BarColor        []color.NRGBA
 	BarType
 }
 
-func NewProgressBar(t BarType, border BorderOptions, area Area) *ProgressBar {
-	return &ProgressBar{
-		Component:       NewComponent(area),
+func NewProgressBar(t BarType, entityData *entity.EntityData, border BorderOptions, area Area) *ProgressBar {
+	p := &ProgressBar{
+		ComponentData:   NewComponentData(area),
 		BackgroundColor: color.Black,
 		BarType:         t,
 		Border:          border,
+		CurrValue:       make(map[*float64][]color.NRGBA, 1),
 	}
+
+	switch t {
+	case HealthBar:
+		p.MaxValue = &entityData.MaxHp
+		p.CurrValue = make(map[*float64][]color.NRGBA, 2)
+		p.CurrValue[&entityData.Stats[stat.Hp]] = []color.NRGBA{
+			color.NRGBA{0, 200, 0, 255},
+			color.NRGBA{255, 255, 0, 255},
+			color.NRGBA{255, 0, 0, 255},
+		}
+		p.CurrValue[&entityData.Shield] = []color.NRGBA{
+			color.NRGBA{R: 245, G: 245, B: 245, A: 192},
+		}
+	case StaminaBar:
+		p.MaxValue = &entityData.MaxSt
+		p.CurrValue[&entityData.Stats[stat.St]] = []color.NRGBA{
+			color.NRGBA{255, 210, 50, 255},
+			color.NRGBA{255, 140, 0, 255},
+			color.NRGBA{255, 0, 0, 255},
+		}
+	case ManaBar:
+		p.MaxValue = &entityData.MaxMp
+		p.CurrValue[&entityData.Stats[stat.Mp]] = []color.NRGBA{
+			color.NRGBA{0, 200, 255, 255},
+			color.NRGBA{0, 0, 255, 255},
+			color.NRGBA{150, 0, 255, 255},
+		}
+	default:
+		panic("Daje")
+	}
+
+	return p
 }
 
+func (b *ProgressBar) GetComponent() *ComponentData {
+	return b.ComponentData
+}
 func (b *ProgressBar) Update() error {
 	return nil
 }
 func (b *ProgressBar) Draw(screen *ebiten.Image) {
-	if b.Ratio > 1 {
-		b.Ratio = 1
-	}
-	b.BarColor = GetBarColor(b.BarType, b.Ratio)
 	// Sfondo
 	vector.FillRect(
 		screen,
@@ -62,15 +96,21 @@ func (b *ProgressBar) Draw(screen *ebiten.Image) {
 	)
 
 	// Parte piena
-	vector.FillRect(
-		screen,
-		float32(b.X),
-		float32(b.Y),
-		float32(b.Width*b.Ratio),
-		float32(b.Height),
-		b.BarColor,
-		false,
-	)
+	for value, color := range b.CurrValue {
+		rate := *value / *b.MaxValue
+		if rate > 1 {
+			rate = 1
+		}
+		vector.FillRect(
+			screen,
+			float32(b.X),
+			float32(b.Y),
+			float32(b.Width*rate),
+			float32(b.Height),
+			b.GetBarColor(value, color),
+			false,
+		)
+	}
 
 	//Bordo
 	vector.StrokeRect(
@@ -85,34 +125,14 @@ func (b *ProgressBar) Draw(screen *ebiten.Image) {
 	)
 }
 
-func GetBarColor(barT BarType, value float64) color.NRGBA {
-	switch barT {
-	case HealthBar:
-		return ThreeColorLerp(
-			color.NRGBA{0, 200, 0, 255},
-			color.NRGBA{255, 255, 0, 255},
-			color.NRGBA{255, 0, 0, 255},
-			value,
-		)
-	case ShieldBar:
-		return color.NRGBA{R: 245, G: 245, B: 245, A: 192}
-	case StaminaBar:
-		return ThreeColorLerp(
-			color.NRGBA{255, 210, 50, 255},
-			color.NRGBA{255, 140, 0, 255},
-			color.NRGBA{255, 0, 0, 255},
-			value,
-		)
-	case ManaBar:
-		return ThreeColorLerp(
-			color.NRGBA{0, 200, 255, 255},
-			color.NRGBA{0, 0, 255, 255},
-			color.NRGBA{150, 0, 255, 255},
-			value,
-		)
-	default:
-		panic("Daje")
+func (b *ProgressBar) GetBarColor(value *float64, color []color.NRGBA) color.Color {
+	if len(color) == 1 {
+		return color[0]
 	}
+	if len(color) == 3 {
+		return b.ThreeColorLerp(value)
+	}
+	panic("dajjeee")
 }
 
 // COLOR
@@ -124,15 +144,17 @@ func LerpColor(a, b color.NRGBA, t float64) color.NRGBA {
 		A: (a.A + b.A) / 2,
 	}
 }
-func ThreeColorLerp(a, b, c color.NRGBA, value float64) color.NRGBA {
-	value = 1 - value
-
+func (b *ProgressBar) ThreeColorLerp(value *float64) color.NRGBA {
+	rate := 1 - *b.MaxValue / *value
+	if rate > 1 {
+		rate = 1
+	}
 	// Curva esponenziale
-	value = math.Pow(value, 2.0)
+	rate = math.Pow(rate, 2.0)
 
-	if value <= 0.5 {
-		return LerpColor(a, b, value/0.5)
+	if rate <= 0.5 {
+		return LerpColor(b.CurrValue[value][0], b.CurrValue[value][1], rate/0.5)
 	}
 
-	return LerpColor(b, c, (value-0.5)/0.5)
+	return LerpColor(b.CurrValue[value][1], b.CurrValue[value][2], (rate-0.5)/0.5)
 }

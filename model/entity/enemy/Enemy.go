@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"slices"
 
-	"github.com/KONshougun/K-game/game/adventure"
 	"github.com/KONshougun/K-game/model"
 	"github.com/KONshougun/K-game/model/entity"
 	"github.com/KONshougun/K-game/model/equipment/armor"
@@ -22,22 +21,42 @@ type Reward struct {
 	Items       []ItemDrop
 }
 type ItemDrop struct {
-	Item   adventure.Item
+	Item   model.Item
 	Amount uint16
 }
 
 type Enemy interface {
 	GetEnemy() *EnemyData
 }
+type Opponents []Enemy
+
+func (t Opponents) GetEntities() []*entity.EntityData {
+	team := make([]*entity.EntityData, len(t))
+	for i, e := range t {
+		team[i] = e.GetEnemy().GetEntity()
+	}
+	return team
+}
+
+func (t Opponents) GetAliveEntities() []*entity.EntityData {
+	team := make([]*entity.EntityData, len(t))
+	for i, e := range t {
+		if e.GetEnemy().GetEntity().Stats[stat.Hp] > 0 {
+			team[i] = e.GetEnemy().GetEntity()
+		}
+	}
+	return team
+}
+
 type EnemyController struct{}
 type EnemyData struct {
 	*entity.EntityData
 	EnemyName
 	Name      EnemyName
-	dropItems []adventure.Item
+	dropItems []model.Item
 }
 
-func NewEnemy(name EnemyName, dropItems []adventure.Item) *EnemyData {
+func NewEnemy(name EnemyName, dropItems []model.Item) *EnemyData {
 	e := &EnemyData{
 		EntityData: entity.NewEntity(name.String(), EnemyController{}),
 		dropItems:  dropItems,
@@ -87,6 +106,13 @@ func (EnemyController) GetTarget(opponents []*entity.EntityData, targetCount uin
 		}
 	}
 	return targets
+}
+
+func (e *EnemyData) GetAbility([]bool) int {
+	for i := range slices.Backward(e.Abilities) {
+		return i
+	}
+	return -1
 }
 func (e *EnemyData) SetAbilities(ad entity.AbilityData) {
 	e.Abilities[0] = entity.NewAbility(ad, func(opponents []*entity.EntityData) map[int][]model.Damage {

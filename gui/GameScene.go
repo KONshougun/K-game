@@ -1,28 +1,20 @@
 package gui
 
 import (
+	"github.com/KONshougun/K-game/gui/component/container"
+	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Scene interface {
-	Update() error
-	Draw(screen *ebiten.Image)
-	Layout(outsideWidth, outsideHeight int) (int, int)
-}
-
-const (
-	GameWidth  = 1280
-	GameHeight = 720
-)
-
 type GameStruct struct {
-	Scenes []Scene
+	scenes []container.Scene
+	data   guihandler.Data
 }
 
 var Game GameStruct
 
-func NewGame(scene Scene) {
-	Game.Scenes = append(Game.Scenes, scene)
+func NewGame(scene container.Scene) {
+	Game.scenes = append(Game.scenes, scene)
 
 	ebiten.SetWindowSize(1280, 720)
 	ebiten.SetWindowTitle("Gioco")
@@ -32,13 +24,34 @@ func NewGame(scene Scene) {
 }
 
 func (g *GameStruct) Update() error {
-	return g.Scenes[len(g.Scenes)-1].Update()
+	return g.scenes[0].Update()
 }
 
 func (g *GameStruct) Draw(screen *ebiten.Image) {
-	g.Scenes[len(g.Scenes)-1].Draw(screen)
+	g.scenes[0].Draw(screen)
+}
+func (g *GameStruct) GetSceneData() *container.SceneData {
+	return g.scenes[0].GetSceneData()
 }
 
+func (g *GameStruct) AddScene(scene container.Scene) {
+	if scene != nil {
+		g.scenes = append([]container.Scene{scene}, g.scenes...)
+	}
+}
+
+func (g *GameStruct) RemoveScene(sceneData guihandler.Data) {
+	g.data = sceneData
+	g.scenes = append(g.scenes[1:], nil)
+}
+func (g *GameStruct) GetData() guihandler.Data {
+	app := g.data
+	g.data = nil
+	return app
+}
+func (g *GameStruct) SetData(data guihandler.Data) {
+	g.data = data
+}
 func (g *GameStruct) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return GameWidth, GameHeight
+	return container.GameWidth, container.GameHeight
 }

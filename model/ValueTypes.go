@@ -27,8 +27,9 @@ const (
 )
 
 type Damage struct {
-	DmgType DamageType
-	Amount  float64
+	Amount    float64
+	DmgType   DamageType
+	DmgTarget DamageTarget
 }
 
 type HealType byte

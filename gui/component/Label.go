@@ -31,7 +31,7 @@ const (
 )
 
 type Label struct {
-	*Component
+	*ComponentData
 
 	Text   string
 	Face   text.Face
@@ -40,7 +40,7 @@ type Label struct {
 
 func NewLabel(str string, c color.Color, size Size, space LineSpacing, horizontalAlign, verticalAlign text.Align, area Area) *Label {
 	return &Label{
-		Component: NewComponent(area),
+		ComponentData: NewComponentData(area),
 
 		Text: str,
 		Face: LoadFont(NotoSerif, float64(size)),
@@ -57,6 +57,9 @@ func NewLabel(str string, c color.Color, size Size, space LineSpacing, horizonta
 	}
 }
 
+func (l *Label) GetComponent() *ComponentData {
+	return l.ComponentData
+}
 func (l *Label) Update() error {
 	return nil
 }

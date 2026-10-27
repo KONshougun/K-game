@@ -18,6 +18,7 @@ type EntityType byte
 const (
 	Character EntityType = iota
 	Enemy
+	Support
 )
 
 func (s EntityType) String() string {
@@ -56,7 +57,7 @@ type EntityData struct {
 
 	Effects [event.EventCount][]effect.Effect
 	Buffs   []effect.Buff
-	FightStats
+	*FightStats
 }
 
 func NewEntity(name string, c Controller) *EntityData {
@@ -68,6 +69,7 @@ func NewEntity(name string, c Controller) *EntityData {
 		Name:    name,
 		Weapons: make([]*weapon.Weapon, 0, 1),
 		Armor:   armor.NewArmor(),
+		FightStats: &FightStats{},	
 	}
 	e.AddBaseEvent()
 	return e
@@ -169,6 +171,34 @@ func (e *EntityData) GetEquipmentStats(evt event.EventData) (stat.Stats, stat.St
 	return *mainStats, *subStats
 }
 
+func (e *EntityData) AvailableAbilities() []bool {
+	abilities := make([]bool, len(e.Abilities))
+	appSrt := make([]string, len(e.Abilities))
+	for i := range e.Abilities {
+		appSrt[i], abilities[i] = e.Abilities[i].IsUsable(e)
+	}
+	return abilities
+}
+func (e *EntityData) CastAbility(abilityIdx int, opponents []*EntityData) map[int][]model.Damage {
+	if abilityIdx == -1 {
+		e.Recovery()
+		return map[int][]model.Damage{}
+	}
+	e.Abilities[abilityIdx].CastAbility(&e.Stats)
+	return e.Abilities[abilityIdx].Execute(opponents)
+}
+func (e *EntityData) Recovery() {
+	e.Stats[stat.St] *= 1.30
+	if e.Stats[stat.St] > e.MaxSt {
+		e.Stats[stat.St] = e.MaxSt
+	}
+	e.Stats[stat.Mp] *= 1.30
+	if e.Stats[stat.Mp] > e.MaxMp {
+		e.Stats[stat.Mp] = e.MaxMp
+	}
+	e.Stats[stat.Spd] -= 500 + e.Stats[stat.AtkSpd]
+}
+
 func (e *EntityData) CalculateDmg(dmg, spDmg float64, enemyStat stat.Stats, dmgT model.DamageType) model.Damage {
 	switch dmgT {
 	case model.Flat, model.Crit, model.SuperCrit:
@@ -221,7 +251,7 @@ func (e *EntityData) Dameged(dmg float64, dmgT model.DamageType, dmgTarget model
 }
 
 func (e *EntityData) AddBaseEvent() {
-	e.AddEffect(event.SetEntityData, effect.None, effect.Normal, func(evt event.EventData) event.EventData {
+	e.AddEffect(event.SetEntityData, effect.None, effect.ExtremeFast, func(evt event.EventData) event.EventData {
 		e.AbilitiesCdReset()
 		e.Stats = e.CalculateStats(evt)
 		e.MaxHp = e.Stats[stat.Hp]
@@ -336,21 +366,6 @@ func (e *EntityData) QtrActivasion() bool {
 }
 
 //FIGHT FUNCS
-
-/*func (e *EntityData) ActiveAbility(ability int, opponents any) map[int][]model.Damage {
-	e.TriggerEffects(event.CastAbility, effect.None, ability)
-	result := e.Abilities[ability].execute.Activate(opponents)
-
-	atks, ok := result.(map[int][]model.Damage)
-	if !ok {
-		fmt.Printf("ability=%v\n", ability)
-		fmt.Printf("result=%#v\n", result)
-		fmt.Printf("type=%T\n", result)
-		panic(fmt.Sprintf("Activate returned %T, expected map[int][]model.Damage", result))
-	}
-
-	return atks
-}*/
 
 func (e *EntityData) HasHit(defenderStat stat.Stats, abilityAcc float64) bool {
 	return rand.Intn(100) < int(e.Stats[stat.Acc]+abilityAcc-defenderStat[stat.Eva])

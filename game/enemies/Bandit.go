@@ -1,12 +1,13 @@
 package enemies
 
 import (
- "github.com/KONshougun/K-game/game/adventure"
- "github.com/KONshougun/K-game/model/entity"
- "github.com/KONshougun/K-game/model/entity/enemy"
- "github.com/KONshougun/K-game/model/equipment/armor"
- "github.com/KONshougun/K-game/model/equipment/weapon"
 	"math/rand"
+
+	"github.com/KONshougun/K-game/model"
+	"github.com/KONshougun/K-game/model/entity"
+	"github.com/KONshougun/K-game/model/entity/enemy"
+	"github.com/KONshougun/K-game/model/equipment/armor"
+	"github.com/KONshougun/K-game/model/equipment/weapon"
 )
 
 type Bandit struct {
@@ -15,7 +16,7 @@ type Bandit struct {
 
 func NewBandit(lvl uint8, w *weapon.Weapon, a *armor.Armor) *Bandit {
 	b := &Bandit{
-		EnemyData: enemy.NewEnemy(enemy.Bandit, []adventure.Item{}),
+		EnemyData: enemy.NewEnemy(enemy.Bandit, []model.Item{}),
 	}
 	b.EnemyName = enemy.Bandit
 	b.SetBaseStats(enemy.EnemiesBaseStats[b.EnemyName])

@@ -17,7 +17,7 @@ const (
 )
 
 type Button struct {
-	*Component
+	*ComponentData
 	*Label
 
 	Locked bool
@@ -28,12 +28,17 @@ type Button struct {
 }
 
 func NewButton(states [CountBtnState]*ebiten.Image, label *Label, area Area, f func()) *Button {
-	return &Button{
-		Component: NewComponent(area),
-		Label:     label,
-		State:     states,
-		OnClick:   f,
+	b := &Button{
+		ComponentData: NewComponentData(area),
+		Label:         label,
+		State:         states,
+		OnClick:       f,
 	}
+
+	return b
+}
+func (b *Button) GetComponent() *ComponentData {
+	return b.ComponentData
 }
 
 func (b *Button) Update() error {
@@ -56,6 +61,7 @@ func (b *Button) Update() error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -66,11 +72,13 @@ func (b *Button) Draw(screen *ebiten.Image) {
 		if img == nil {
 			img = b.State[Normal]
 		}
+
+		opts := ebiten.DrawImageOptions{}
+
 		imgBounds := img.Bounds()
 		scaleX := float64(b.Area.Width) / float64(imgBounds.Dx())
 		scaleY := float64(b.Area.Height) / float64(imgBounds.Dy())
 
-		opts := ebiten.DrawImageOptions{}
 		opts.GeoM.Scale(scaleX, scaleY)
 		opts.GeoM.Translate(
 			float64(b.Area.X),

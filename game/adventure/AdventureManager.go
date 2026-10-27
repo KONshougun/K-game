@@ -2,6 +2,7 @@ package adventure
 
 import (
 	"github.com/KONshougun/K-game/game/characters"
+	"github.com/KONshougun/K-game/model"
 	"github.com/KONshougun/K-game/model/entity/character"
 	"github.com/KONshougun/K-game/model/equipment/weapon"
 )
@@ -17,7 +18,7 @@ func InitAdventure() *Adventure {
 	a.Inventory.Characters[character.Knight] = characters.NewKnight(1, weapon.NewWeapon(weapon.Sword, weapon.Std), nil)
 	a.Inventory.WeaponInv[0] = a.Inventory.Characters[0].GetCharacter().Weapons[0]
 
-	a.Inventory.ItemInv[Monete] = 50
+	a.Inventory.ItemInv[model.Monete] = 50
 
 	return &a
 }

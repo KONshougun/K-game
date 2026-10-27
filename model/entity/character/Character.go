@@ -6,6 +6,8 @@ import (
 	"slices"
 
 	//"github.com/KONshougun/K-game/game/combat/handler"
+	"github.com/KONshougun/K-game/game/combat/effect"
+	"github.com/KONshougun/K-game/game/combat/event"
 	"github.com/KONshougun/K-game/game/comm"
 	"github.com/KONshougun/K-game/model"
 	"github.com/KONshougun/K-game/model/entity"
@@ -20,7 +22,30 @@ type Character interface {
 	GetCharacter() *CharacterData
 	AwakenAbility(index int)
 }
+type Team []Character
+
+func (t Team) GetEntities() []*entity.EntityData {
+	team := make([]*entity.EntityData, len(t))
+	for i, c := range t {
+		team[i] = c.GetCharacter().GetEntity()
+	}
+	return team
+}
+func (t Team) GetAliveEntities() []*entity.EntityData {
+	team := make([]*entity.EntityData, len(t))
+	for i, c := range t {
+		if c.GetCharacter().GetEntity().Stats[stat.Hp] > 0 {
+			team[i] = c.GetCharacter().GetEntity()
+		}
+	}
+	return team
+}
+
 type CharacterController struct{}
+
+type AdventureStats struct {
+	CurrHp, CurrSt, CurrMp float64
+}
 type CharacterData struct {
 	*entity.EntityData
 	CharacterName
@@ -33,6 +58,8 @@ type CharacterData struct {
 	Maestry         float64
 	AwekeningPoint  float64
 	AbilityAwakened []bool
+
+	*AdventureStats
 }
 
 const xpScalingFactorCharacter = 1.2122855485170705
@@ -41,7 +68,26 @@ func NewCharacter(name CharacterName, a *armor.Armor, w *weapon.Weapon, wt weapo
 	c := &CharacterData{
 		EntityData: entity.NewEntity(name.String(), CharacterController{}),
 		XpRequired: 50,
+		AdventureStats: &AdventureStats{
+			CurrHp: 1,
+			CurrSt: 1,
+			CurrMp: 1,
+		},
 	}
+	c.AddEffect(event.SetEntityData, effect.None, effect.Fast, func(evt event.EventData) event.EventData {
+		c.AbilitiesCdReset()
+		c.Stats[stat.Hp] *= c.CurrHp
+		c.Stats[stat.St] *= c.CurrSt
+		c.Stats[stat.Mp] *= c.CurrMp
+		return evt
+	})
+	c.AddEffect(event.EndTurn, effect.None, effect.Slow, func(evt event.EventData) event.EventData {
+		c.AbilitiesCdReset()
+		c.CurrHp = c.MaxHp/c.Stats[stat.Hp]
+		c.CurrSt = c.MaxSt/c.Stats[stat.St]
+		c.CurrMp = c.MaxMp/c.Stats[stat.Mp]
+		return evt
+	})
 	c.EntityType = entity.Character
 	c.Abilities = make([]entity.Ability, 4)
 	c.AbilityAwakened = make([]bool, 4)
@@ -64,12 +110,7 @@ func (c *CharacterData) GetEntity() *entity.EntityData {
 func (CharacterController) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
 	var action int
 
-	abilities := make([]bool, len(e.Abilities))
-	appSrt := make([]string, len(e.Abilities))
-	for i := range e.Abilities {
-		appSrt[i], abilities[i] = e.Abilities[i].IsUsable(e)
-	}
-
+	abilities := e.AvailableAbilities()
 	fmt.Println("Selezionare l'abilità da voler utilizzare")
 	for {
 		found := false
@@ -78,7 +119,7 @@ func (CharacterController) Attack(e *entity.EntityData, opponents []*entity.Enti
 				fmt.Printf(" %v - %s\n", (i + 1), comm.Yellow.Write(e.Abilities[i].Name))
 				found = true
 			} else {
-				fmt.Printf(" %v - %v\n", e.Abilities[i], appSrt[i])
+				fmt.Printf(" %v - Non utilizzabile\n", e.Abilities[i])
 			}
 		}
 		if !found {
@@ -95,6 +136,13 @@ func (CharacterController) Attack(e *entity.EntityData, opponents []*entity.Enti
 }
 func (CharacterController) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets, randomTargets bool) []int {
 
+	if len(opponents) <= int(targetCount) {
+		targets := make([]int, len(opponents))
+		for i := range opponents {
+			targets[i] = i
+		}
+		return targets
+	}
 	targets := make([]int, 0, targetCount)
 
 	for len(targets) != int(targetCount) {
@@ -146,7 +194,6 @@ func (CharacterController) GetTarget(opponents []*entity.EntityData, targetCount
 
 	return targets
 }
-
 func (e *CharacterData) LevelUp() {
 	for e.XpRequired < e.Xp && !e.MaxLvl {
 		e.Level++

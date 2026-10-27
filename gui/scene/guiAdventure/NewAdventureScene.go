@@ -6,6 +6,7 @@ import (
 	"github.com/KONshougun/K-game/game/adventure"
 	"github.com/KONshougun/K-game/gui"
 	"github.com/KONshougun/K-game/gui/component"
+	"github.com/KONshougun/K-game/gui/component/container"
 	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -13,8 +14,7 @@ import (
 )
 
 type StartAdventure struct {
-	*component.Background
-	InitLbl *component.Button
+	*container.SceneData
 }
 
 var lbls = []string{
@@ -25,38 +25,39 @@ var lbls = []string{
 var i = 0
 
 func StartAdventureScene() *StartAdventure {
-	area := component.Area{
-		X:      0,
-		Y:      0,
-		Width:  gui.GameWidth,
-		Height: gui.GameHeight,
-	}
 	s := &StartAdventure{
-		Background: component.NewBackground(guihandler.LoadImage("asset/background/ui/Menu_Background.png"), area),
-		InitLbl: component.NewButton([4]*ebiten.Image{}, component.NewLabel(lbls[i], color.White,
-			component.VeryLargeSize, component.VeryLargeSpace, text.AlignCenter, text.AlignCenter, area,
-		), area, func() {
-			i++
-			if i == len(lbls) {
-				gui.Game.Scenes = append(gui.Game.Scenes, NewAdvenureScene(adventure.InitAdventure()))
-			}
-		}),
+		SceneData: container.NewScene(guihandler.LoadImage("asset/background/ui/Menu_Background.png")),
+	}
+	initMsg := component.NewButton([4]*ebiten.Image{}, component.NewLabel(lbls[i], color.White,
+		component.VeryLargeSize, component.VeryLargeSpace, text.AlignCenter, text.AlignCenter, s.Area,
+	), s.Area, nil)
+	initMsg.OnClick = func() {
+		i++
+		if i < len(lbls) {
+			initMsg.Text = lbls[i]
+		} else if i == len(lbls) {
+			gui.Game.RemoveScene(&guihandler.NewAdventureData{AdvData: adventure.InitAdventure()})
+			gui.Game.AddScene(NewAdvenureScene())
+		}
+	}
+
+	if !s.Panel.AddChild(container.Child{C: initMsg}) {
+		panic("dake")
 	}
 	return s
 }
 
 func (s *StartAdventure) Update() error {
-	s.InitLbl.Update()
-	return nil
+	return s.Panel.Update()
 }
 func (s *StartAdventure) Draw(screen *ebiten.Image) {
-	if i < len(lbls) {
-		s.InitLbl.Label.Text = lbls[i]
-	}
-	s.Background.Draw(screen)
-	s.InitLbl.Draw(screen)
+	s.Panel.Draw(screen)
+}
+
+func (s *StartAdventure) GetSceneData() *container.SceneData {
+	return s.SceneData
 }
 
 func (s *StartAdventure) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return gui.GameWidth, gui.GameHeight
+	return container.GameWidth, container.GameHeight
 }

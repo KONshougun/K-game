@@ -5,28 +5,31 @@ import (
 )
 
 type Background struct {
-	*Component
+	*ComponentData
 
 	Image *ebiten.Image
 }
 
 func NewBackground(img *ebiten.Image, area Area) *Background {
 	return &Background{
-		Component: NewComponent(area),
-		Image:     img,
+		ComponentData: NewComponentData(area),
+		Image:         img,
 	}
 }
 
 func (b *Background) Update() error {
 	return nil
 }
-func (b *Background) Draw(screen *ebiten.Image) {
-	opts := ebiten.DrawImageOptions{}
 
-	imgBounds := b.Image.Bounds()
-	scaleX := b.Area.Width / float64(imgBounds.Dx())
-	scaleY := b.Area.Height / float64(imgBounds.Dy())
-	opts.GeoM.Scale(scaleX, scaleY)
-	opts.GeoM.Translate(b.Area.X, b.Area.Y)
-	screen.DrawImage(b.Image, &opts)
+func (b *Background) Draw(screen *ebiten.Image) {
+	if b.Image != nil {
+		opts := ebiten.DrawImageOptions{}
+
+		imgBounds := b.Image.Bounds()
+		scaleX := b.Area.Width / float64(imgBounds.Dx())
+		scaleY := b.Area.Height / float64(imgBounds.Dy())
+		opts.GeoM.Scale(scaleX, scaleY)
+		opts.GeoM.Translate(b.Area.X, b.Area.Y)
+		screen.DrawImage(b.Image, &opts)
+	}
 }
