@@ -1,59 +1,25 @@
 package component
 
 import (
-	"bytes"
 	"image/color"
-	"os"
 
+	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"golang.org/x/text/language"
-)
-
-type Size byte
-
-const (
-	VerySmallSize Size = 8
-	SmallSize     Size = 12
-	NormalSize    Size = 16
-	LargeSize     Size = 24
-	VeryLargeSize Size = 32
-)
-
-type LineSpacing byte
-
-const (
-	NoneSpace      LineSpacing = 0
-	SmallSpace     LineSpacing = 8
-	NormalSpace    LineSpacing = 16
-	LargeSpace     LineSpacing = 24
-	VeryLargeSpace LineSpacing = 32
 )
 
 type Label struct {
 	*ComponentData
 
-	Text   string
-	Face   text.Face
-	Layout *text.DrawOptions
+	guihandler.Text
 }
 
-func NewLabel(str string, c color.Color, size Size, space LineSpacing, horizontalAlign, verticalAlign text.Align, area Area) *Label {
+func NewLabel(str string, c color.Color, size guihandler.TextSize, space guihandler.TextLineSpacing,
+	horizontalAlign, verticalAlign text.Align, area guihandler.Area) *Label {
 	return &Label{
 		ComponentData: NewComponentData(area),
 
-		Text: str,
-		Face: LoadFont(NotoSerif, float64(size)),
-		Layout: &text.DrawOptions{
-			LayoutOptions: text.LayoutOptions{
-				LineSpacing:    float64(space),
-				PrimaryAlign:   horizontalAlign,
-				SecondaryAlign: verticalAlign,
-			},
-			DrawImageOptions: ebiten.DrawImageOptions{
-				ColorScale: colorScale(c),
-			},
-		},
+		Text: guihandler.NewText(str, c, size, space, horizontalAlign, verticalAlign),
 	}
 }
 
@@ -70,60 +36,14 @@ func (l *Label) Draw(screen *ebiten.Image) {
 	text.Draw(screen, str, l.Face, l.Layout)
 }
 
-/*func (l *Label) fitText() string {
-	str := []rune(l.Text)
-	suffix := "..."
-
-	fits := func(s string) bool {
-		w, h := text.Measure(
-			s,
-			l.Face,
-			l.Layout.LineSpacing,
-		)
-
-		return w <= l.Width && h <= l.Height
-	}
-
-	if fits(l.Text) {
-		return l.Text
-	}
-
-	for len(str) > 0 {
-		candidate := string(str) + suffix
-
-		if fits(candidate) {
-			return candidate
-		}
-
-		str = str[:len(str)-1]
-	}
-
-	if fits(suffix) {
-		return suffix
-	}
-
-	fmt.Println("ciao")
-	return ""
-}*/
-
 func (l *Label) fitText() string {
 	const suffix = "..."
 
-	fits := func(s string) bool {
-		w, h := text.Measure(
-			s,
-			l.Face,
-			l.Layout.LineSpacing,
-		)
-
-		return w <= l.Width && h <= l.Height
+	if l.Text.Fit(l.Area) {
+		return l.Text.Content
 	}
 
-	if fits(l.Text) {
-		return l.Text
-	}
-
-	str := []rune(l.Text)
+	str := []rune(l.Text.Content)
 
 	for len(str) > 0 {
 		// Evita che il testo finisca con un newline prima di "..."
@@ -131,50 +51,19 @@ func (l *Label) fitText() string {
 			str = str[:len(str)-1]
 		}
 
-		candidate := string(str) + suffix
+		l.Content = string(str) + suffix
 
-		if fits(candidate) {
-			return candidate
+		if l.Text.Fit(l.Area) {
+			return l.Content
 		}
 
 		str = str[:len(str)-1]
 	}
 
-	if fits(suffix) {
-		return suffix
+	l.Content = suffix
+	if l.Text.Fit(l.Area) {
+		return l.Content
 	}
 
 	return ""
-}
-
-func colorScale(c color.Color) ebiten.ColorScale {
-	var scale ebiten.ColorScale
-	scale.ScaleWithColor(c)
-	return scale
-}
-
-//FONT
-
-type Font string
-
-const (
-	NotoSerif = "asset/ui/font/NotoSerif.ttf"
-)
-
-func LoadFont(font Font, size float64) text.Face {
-	data, err := os.ReadFile(string(font))
-	if err != nil {
-		panic(err)
-	}
-
-	source, err := text.NewGoTextFaceSource(bytes.NewReader(data))
-	if err != nil {
-		panic(err)
-	}
-
-	return &text.GoTextFace{
-		Source:   source,
-		Language: language.Italian,
-		Size:     size,
-	}
 }

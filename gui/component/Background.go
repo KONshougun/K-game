@@ -1,6 +1,7 @@
 package component
 
 import (
+	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -10,7 +11,7 @@ type Background struct {
 	Image *ebiten.Image
 }
 
-func NewBackground(img *ebiten.Image, area Area) *Background {
+func NewBackground(img *ebiten.Image, area guihandler.Area) *Background {
 	return &Background{
 		ComponentData: NewComponentData(area),
 		Image:         img,

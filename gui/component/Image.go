@@ -3,6 +3,7 @@ package component
 import (
 	"math"
 
+	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -13,7 +14,7 @@ type Image struct {
 	Opts *ebiten.DrawImageOptions
 }
 
-func NewImage(img *ebiten.Image, area Area) *Image {
+func NewImage(img *ebiten.Image, area guihandler.Area) *Image {
 	i := &Image{
 		ComponentData: NewComponentData(area),
 		Img:           img,

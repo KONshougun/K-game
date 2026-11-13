@@ -1,6 +1,7 @@
 package component
 
 import (
+	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
@@ -27,7 +28,7 @@ type Button struct {
 	OnClick func()
 }
 
-func NewButton(states [CountBtnState]*ebiten.Image, label *Label, area Area, f func()) *Button {
+func NewButton(states [CountBtnState]*ebiten.Image, label *Label, area guihandler.Area, f func()) *Button {
 	b := &Button{
 		ComponentData: NewComponentData(area),
 		Label:         label,
@@ -48,7 +49,7 @@ func (b *Button) Update() error {
 
 	mouseX, mouseY := ebiten.CursorPosition()
 
-	if b.contains(float64(mouseX), float64(mouseY)) {
+	if b.IsIn(float64(mouseX), float64(mouseY)) {
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			if b.OnClick != nil {
 				b.OnClick()
@@ -98,7 +99,7 @@ func (b *Button) getState() ButtonState {
 
 	mouseX, mouseY := ebiten.CursorPosition()
 
-	if !b.contains(float64(mouseX), float64(mouseY)) {
+	if !b.IsIn(float64(mouseX), float64(mouseY)) {
 		return Normal
 	}
 
@@ -107,10 +108,4 @@ func (b *Button) getState() ButtonState {
 	}
 
 	return MouseOver
-}
-func (b *Button) contains(x, y float64) bool {
-	return x >= b.X &&
-		x <= b.X+b.Width &&
-		y >= b.Y &&
-		y <= b.Y+b.Height
 }

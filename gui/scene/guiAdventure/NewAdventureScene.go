@@ -29,12 +29,12 @@ func StartAdventureScene() *StartAdventure {
 		SceneData: container.NewScene(guihandler.LoadImage("asset/background/ui/Menu_Background.png")),
 	}
 	initMsg := component.NewButton([4]*ebiten.Image{}, component.NewLabel(lbls[i], color.White,
-		component.VeryLargeSize, component.VeryLargeSpace, text.AlignCenter, text.AlignCenter, s.Area,
+		guihandler.VeryLargeSize, guihandler.VeryLargeSpace, text.AlignCenter, text.AlignCenter, s.Area,
 	), s.Area, nil)
 	initMsg.OnClick = func() {
 		i++
 		if i < len(lbls) {
-			initMsg.Text = lbls[i]
+			initMsg.Content = lbls[i]
 		} else if i == len(lbls) {
 			gui.Game.RemoveScene(&guihandler.NewAdventureData{AdvData: adventure.InitAdventure()})
 			gui.Game.AddScene(NewAdvenureScene())

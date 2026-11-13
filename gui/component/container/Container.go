@@ -4,15 +4,16 @@ import (
 	"image/color"
 
 	"github.com/KONshougun/K-game/gui/component"
+	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type QoS int8
 
 const (
-	Fast QoS = -1
+	Fast   QoS = -1
 	Normal QoS = 0
-	Slow QoS = 1
+	Slow   QoS = 1
 
 	QoSCount QoS = 3
 )
@@ -34,7 +35,7 @@ type ContainerData struct {
 	*Fade
 }
 
-func NewContainerData(area component.Area, img *ebiten.Image) *ContainerData {
+func NewContainerData(area guihandler.Area, img *ebiten.Image) *ContainerData {
 	return &ContainerData{
 		ComponentData: component.NewComponentData(area),
 		Background:    component.NewBackground(img, area),

@@ -4,6 +4,7 @@ import (
 	"image/color"
 	"math"
 
+	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/KONshougun/K-game/model/entity"
 	"github.com/KONshougun/K-game/model/stat"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -35,7 +36,7 @@ type ProgressBar struct {
 	BarType
 }
 
-func NewProgressBar(t BarType, entityData *entity.EntityData, border BorderOptions, area Area) *ProgressBar {
+func NewProgressBar(t BarType, entityData *entity.EntityData, border BorderOptions, area guihandler.Area) *ProgressBar {
 	p := &ProgressBar{
 		ComponentData:   NewComponentData(area),
 		BackgroundColor: color.Black,

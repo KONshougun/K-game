@@ -2,21 +2,6 @@ package effect
 
 import "github.com/KONshougun/K-game/game/combat/event"
 
-//type IdEffect byte
-
-/*const (
-	FightBaseEff IdEffect = iota
-	BuffEff
-	AbilityEff
-	PassiveEff
-	SetEff
-	GetAbilityEff
-	QtrEff
-	ReviveEff
-
-	IdEffCount
-)*/
-
 type Effect struct {
 	Id       uint16
 	Event    event.EventType

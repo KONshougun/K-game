@@ -14,7 +14,7 @@ type Team struct {
 	Members []*EntityView
 }
 
-func NewTeam(team []*entity.EntityData, area component.Area) *Team {
+func NewTeam(team []*entity.EntityData, area guihandler.Area) *Team {
 	if area.Height < area.Width/2 {
 		panic("area non corretta")
 	}
@@ -31,7 +31,7 @@ func (t *Team) AddMember(members ...*entity.EntityData) bool {
 		if len(t.Members) == 4 {
 			return false
 		}
-		area := component.Area{
+		area := guihandler.Area{
 			X:      t.Area.X,
 			Y:      t.Area.Y + t.Area.Height*0.25,
 			Width:  t.Area.Width * 0.25,
@@ -131,21 +131,21 @@ type EntityView struct {
 	Data *entity.EntityData
 }
 
-func NewEntityView(data *entity.EntityData, area component.Area) *EntityView {
+func NewEntityView(data *entity.EntityData, area guihandler.Area) *EntityView {
 
 	e := &EntityView{
 		Panel: NewPanel(area, nil),
 		Data:  data,
 	}
 
-	avatar := component.NewImage(guihandler.GetAvatar(data.Name, data.EntityType), component.Area{
+	avatar := component.NewImage(guihandler.GetAvatar(data.Name, data.EntityType), guihandler.Area{
 		X:      float64(e.Area.X + e.Area.Width*0.08),
 		Y:      float64(e.Area.Y + e.Area.Height*0.15),
 		Width:  float64(e.Area.Width * 0.85),
 		Height: float64(e.Area.Height * 0.81),
 	})
 	healthBar := component.NewProgressBar(component.HealthBar, data, component.BorderOptions{},
-		component.Area{
+		guihandler.Area{
 			X:      area.X + area.Width*0.05,
 			Y:      area.Y + area.Height*0.05,
 			Width:  area.Width * 0.90,
@@ -153,7 +153,7 @@ func NewEntityView(data *entity.EntityData, area component.Area) *EntityView {
 		},
 	)
 	staminaBar := component.NewProgressBar(component.StaminaBar, data, component.BorderOptions{},
-		component.Area{
+		guihandler.Area{
 			X:      area.X + area.Width*0.05,
 			Y:      area.Y + area.Height*0.09,
 			Width:  area.Width * 0.90,
@@ -161,7 +161,7 @@ func NewEntityView(data *entity.EntityData, area component.Area) *EntityView {
 		},
 	)
 	manaBar := component.NewProgressBar(component.ManaBar, data, component.BorderOptions{},
-		component.Area{
+		guihandler.Area{
 			X:      area.X + area.Width*0.05,
 			Y:      area.Y + area.Height*0.11,
 			Width:  area.Width * 0.90,

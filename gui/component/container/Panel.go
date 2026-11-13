@@ -2,6 +2,7 @@ package container
 
 import (
 	"github.com/KONshougun/K-game/gui/component"
+	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -10,7 +11,7 @@ type Panel struct {
 	children [QoSCount][]component.Component
 }
 
-func NewPanel(area component.Area, img *ebiten.Image, children ...Child) *Panel {
+func NewPanel(area guihandler.Area, img *ebiten.Image, children ...Child) *Panel {
 	p := &Panel{
 		ContainerData: NewContainerData(area, img),
 	}

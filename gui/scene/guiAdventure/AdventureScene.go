@@ -49,7 +49,7 @@ func (s *AdvenureManager) Update() error {
 				return nil
 			}
 		case guihandler.ChooseCharacter:
-			gui.Game.AddScene(battlescene.NewBattleScene(sceneData.GetData()[0].(combat.BattleData)))
+			gui.Game.AddScene(battlescene.NewBattleScene(sceneData.GetData()[0].(*combat.BattleData)))
 			return nil
 		case guihandler.Fight:
 			data := sceneData.GetData()

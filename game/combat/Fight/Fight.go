@@ -1,29 +1,19 @@
-package combat
+package fight
 
 import (
 	"fmt"
 
+	"github.com/KONshougun/K-game/game/combat"
 	"github.com/KONshougun/K-game/game/combat/effect"
 	"github.com/KONshougun/K-game/game/combat/event"
 	"github.com/KONshougun/K-game/game/combat/handler"
 	"github.com/KONshougun/K-game/game/comm"
 	"github.com/KONshougun/K-game/model"
-	"github.com/KONshougun/K-game/model/area"
 	"github.com/KONshougun/K-game/model/entity"
-	"github.com/KONshougun/K-game/model/entity/character"
-	"github.com/KONshougun/K-game/model/entity/enemy"
 	"github.com/KONshougun/K-game/model/stat"
 )
 
-type BattleData struct {
-	Team      character.Team
-	Opponents enemy.Opponents
-	EnemiesDeath enemy.Opponents
-	Area      area.Area
-	Turn      int
-}
-
-func (btlData BattleData) StartFight() {
+func StartFight(btlData *combat.BattleData) {
 	for i := range btlData.Team {
 		btlData.Team[i].GetCharacter().TriggerEffects(event.SetEntityData, effect.None, &handler.SetEntityData{
 			FlatStats:    stat.Stats{},
@@ -38,17 +28,17 @@ func (btlData BattleData) StartFight() {
 	}
 	team := btlData.Team.GetEntities()
 	opponents := btlData.Opponents.GetEntities()
-	TriggerEvent(event.StartFight, team, opponents, btlData.Area, effect.None, &handler.StartFight{
+	btlData.TriggerEvent(event.StartFight, effect.None, &handler.StartFight{
 		Team:      team,
 		Opponents: opponents,
 		Area:      btlData.Area.Id,
 	})
 }
 
-func (btlData BattleData) EndFight() bool {
+func (btlData *combat.BattleData) EndFight() bool {
 	team := make([]*entity.EntityData, 0, len(btlData.Team))
 	if len(team) > 0 {
-		TriggerEvent(event.EndFight, btlData.Team.GetAliveEntities(), btlData.Opponents.GetAliveEntities(), btlData.Area, effect.None, &handler.EndFight{
+		btlData.TriggerEvent(event.EndFight, effect.None, &handler.EndFight{
 			Team: team,
 			Area: btlData.Area.Id,
 		})
@@ -57,8 +47,8 @@ func (btlData BattleData) EndFight() bool {
 		return false
 	}
 }
-func (btlData BattleData) StartTurn() (entity.EntityType, int, []bool) {
-	idx, eType := GetFasterEntity(btlData.Team.GetAliveEntities(), btlData.Opponents.GetAliveEntities())
+func StartTurn(btlData *combat.BattleData) (entity.EntityType, int, []bool) {
+	idx, eType := btlData.getFasterEntity()
 	evData := &handler.StartTurn{
 		Team:      btlData.Team.GetAliveEntities(),
 		Opponents: btlData.Opponents.GetAliveEntities(),
@@ -77,7 +67,7 @@ func (btlData BattleData) StartTurn() (entity.EntityType, int, []bool) {
 		panic("vattene a fanculo")
 	}
 }
-func (btlData BattleData) StartAttack(actorType entity.EntityType, actor *entity.EntityData, abilityIdx int) map[int][]model.Damage {
+func StartAttack(btlData *combat.BattleData, actorType entity.EntityType, actor *entity.EntityData, abilityIdx int) map[int][]model.Damage {
 	var team, opponents []*entity.EntityData
 	switch actorType {
 	case entity.Character:
@@ -92,7 +82,7 @@ func (btlData BattleData) StartAttack(actorType entity.EntityType, actor *entity
 	//TODO FORSE è RIMOVIBILE
 	for i := range targets {
 		for j := range targets[i] {
-			actor.TriggerEffects(event.DamageDealt, effect.Before, &handler.DamageDealt{
+			data := actor.TriggerEffects(event.DamageDealt, effect.Before, &handler.DamageDealt{
 				Team:      team,
 				Opponents: opponents,
 				Area:      btlData.Area.Id,
@@ -106,7 +96,7 @@ func (btlData BattleData) StartAttack(actorType entity.EntityType, actor *entity
 				Opponents: opponents,
 				Area:      btlData.Area.Id,
 				Actor:     actor,
-				Amount:    targets[i][j].Amount,
+				Amount:    data.GetData()[4].(float64), //targets[i][j].Amount,
 				DmgType:   targets[i][j].DmgType,
 				DmgTarget: targets[i][j].DmgTarget,
 			})
@@ -122,9 +112,14 @@ func (btlData BattleData) StartAttack(actorType entity.EntityType, actor *entity
 				DmgType:   targets[i][j].DmgType,
 				DmgTarget: targets[i][j].DmgTarget,
 			})
+
+			//Aggiorno i dati per il frontend
+			targets[i][j].Amount = data.GetData()[4].(float64)
 			if opponents[i].Stats[stat.Hp] <= 0 {
+				targets[i] = targets[i][:j+1]
 				break
 			}
+
 			opponents[i].TriggerEffects(event.DamageTaken, effect.After, &handler.DamageTaken{
 				Team:      team,
 				Opponents: opponents,
@@ -139,7 +134,7 @@ func (btlData BattleData) StartAttack(actorType entity.EntityType, actor *entity
 	return targets
 }
 
-func (btlData BattleData) CheckDeath(targets map[int][]model.Damage) {
+func CheckDeath(btlData *combat.BattleData, targets map[int][]model.Damage) {
 	//Controllo se ci sono stati morti
 
 	death := true
@@ -204,7 +199,7 @@ func (btlData BattleData) CheckDeath(targets map[int][]model.Damage) {
 			}
 		}*/
 }
-func (btlData BattleData) EndTurn(actorType entity.EntityType, actor *entity.EntityData) bool {
+func EndTurn(btlData *combat.BattleData, actorType entity.EntityType, actor *entity.EntityData) bool {
 	team := btlData.Team.GetAliveEntities()
 	opponents := btlData.Opponents.GetAliveEntities()
 	evt := actor.TriggerEffects(event.EndTurn, effect.None, &handler.EndTurn{
@@ -224,18 +219,19 @@ func (btlData BattleData) EndTurn(actorType entity.EntityType, actor *entity.Ent
 	}
 	return false
 }
-func TriggerEvent(ev event.EventType, team []*entity.EntityData, opponentTeam []*entity.EntityData, area area.Area, trg effect.TriggerTiming, evtData event.EventData) {
-	for i := range team {
-		team[i].TriggerEffects(ev, trg, evtData)
+func TriggerEvent(btlData *combat.BattleData, ev event.EventType, trg effect.TriggerTiming, evtData event.EventData) {
+	for _, c := range btlData.Team.GetAliveEntities() {
+		c.TriggerEffects(ev, trg, evtData)
 	}
-	for i := range opponentTeam {
-		opponentTeam[i].TriggerEffects(ev, trg, evtData)
+	for _, e := range btlData.Opponents.GetAliveEntities() {
+		e.TriggerEffects(ev, trg, evtData)
 	}
-	area.TriggerEffects(ev, trg, evtData)
+	btlData.Area.TriggerEffects(ev, trg, evtData)
 }
-func GetFasterEntity(team []*entity.EntityData, opponentTeam []*entity.EntityData) (int, entity.EntityType) {
+func getFasterEntity(btlData *combat.BattleData) (int, entity.EntityType) {
+	team := btlData.Team.GetAliveEntities()
 	var idEntity int
-	var maxSpd float64
+	var maxSpd float64 = team[0].Stats[stat.Spd]
 	var eT entity.EntityType
 	for i := range team {
 		if team[i].Stats[stat.Spd] > maxSpd {
@@ -244,9 +240,10 @@ func GetFasterEntity(team []*entity.EntityData, opponentTeam []*entity.EntityDat
 			eT = entity.Character
 		}
 	}
-	for i := range opponentTeam {
-		if opponentTeam[i].Stats[stat.Spd] > maxSpd {
-			maxSpd = opponentTeam[i].Stats[stat.Spd]
+	opponents := btlData.Opponents.GetAliveEntities()
+	for i := range opponents {
+		if opponents[i].Stats[stat.Spd] > maxSpd {
+			maxSpd = opponents[i].Stats[stat.Spd]
 			eT = entity.Enemy
 		}
 	}

@@ -2,15 +2,15 @@ package entity
 
 import (
 	"github.com/KONshougun/K-game/game/comm"
-	"github.com/KONshougun/K-game/model"
 	"github.com/KONshougun/K-game/model/stat"
+	"github.com/KONshougun/K-game/model/values"
 )
 
 type Ability struct {
 	AbilityData
 
 	Cooldown int8
-	Execute  func(opponents []*EntityData) map[int][]model.Damage
+	Execute  func(opponents []*EntityData) map[int][]*values.Damage
 }
 type AbilityData struct {
 	Name             string
@@ -31,7 +31,7 @@ type AbilityData struct {
 	Acc             uint8
 }
 
-func NewAbility(ad AbilityData, f func(opponents []*EntityData) map[int][]model.Damage) Ability {
+func NewAbility(ad AbilityData, f func(opponents []*EntityData) map[int][]*values.Damage) Ability {
 	return Ability{
 		AbilityData: ad,
 		Execute:     f,

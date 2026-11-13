@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/KONshougun/K-game/gui/component"
+	guihandler "github.com/KONshougun/K-game/gui/guiHandler"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -14,14 +15,14 @@ type ButtonGroup struct {
 	MaxSelected int
 }
 
-func NewButtonGroup(area component.Area, maxSelected int, btns ...*component.Button) *ButtonGroup {
+func NewButtonGroup(area guihandler.Area, maxSelected int, btns ...*component.Button) *ButtonGroup {
 	bGroup := &ButtonGroup{
 		ContainerData: NewContainerData(area, nil),
 		MaxSelected:   maxSelected,
 	}
 	for _, btn := range btns {
 		bGroup.AddChild(Child{
-			C:   btn,
+			C: btn,
 		})
 	}
 	for i := range bGroup.btns {

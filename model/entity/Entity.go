@@ -11,6 +11,7 @@ import (
 	"github.com/KONshougun/K-game/model/equipment/armor"
 	"github.com/KONshougun/K-game/model/equipment/weapon"
 	"github.com/KONshougun/K-game/model/stat"
+	"github.com/KONshougun/K-game/model/values"
 )
 
 type EntityType byte
@@ -33,7 +34,7 @@ type Entity interface {
 }
 
 type Controller interface {
-	Attack(e *EntityData, opponents []*EntityData) (map[int][]model.Damage, int)
+	Attack(e *EntityData, opponents []*EntityData) (map[int][]*values.Damage, int)
 	GetTarget(targets []*EntityData, targetCount uint8, differentTargets, randomTargets bool) []int
 }
 
@@ -64,12 +65,12 @@ func NewEntity(name string, c Controller) *EntityData {
 	e := &EntityData{
 		Controller: c,
 
-		Level:   1,
-		MaxLvl:  100,
-		Name:    name,
-		Weapons: make([]*weapon.Weapon, 0, 1),
-		Armor:   armor.NewArmor(),
-		FightStats: &FightStats{},	
+		Level:      1,
+		MaxLvl:     100,
+		Name:       name,
+		Weapons:    make([]*weapon.Weapon, 0, 1),
+		Armor:      armor.NewArmor(),
+		FightStats: &FightStats{},
 	}
 	e.AddBaseEvent()
 	return e
@@ -179,7 +180,7 @@ func (e *EntityData) AvailableAbilities() []bool {
 	}
 	return abilities
 }
-func (e *EntityData) CastAbility(abilityIdx int, opponents []*EntityData) map[int][]model.Damage {
+func (e *EntityData) CastAbility(abilityIdx int, opponents []*EntityData) map[int][]*values.Damage {
 	if abilityIdx == -1 {
 		e.Recovery()
 		return map[int][]model.Damage{}
@@ -199,7 +200,7 @@ func (e *EntityData) Recovery() {
 	e.Stats[stat.Spd] -= 500 + e.Stats[stat.AtkSpd]
 }
 
-func (e *EntityData) CalculateDmg(dmg, spDmg float64, enemyStat stat.Stats, dmgT model.DamageType) model.Damage {
+func (e *EntityData) CalculateDmg(dmg, spDmg float64, enemyStat stat.Stats, dmgT *values.Damage) *values.Damage {
 	switch dmgT {
 	case model.Flat, model.Crit, model.SuperCrit:
 		dmg, spDmg = e.GetCritDmg(enemyStat, dmg, spDmg, dmgT)

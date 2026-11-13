@@ -22,13 +22,13 @@ type ActionPanel struct {
 	//BuffList []*ebiten.Image			 //FUTURO
 }
 
-func NewActionMenu(s *BattleScene, data *entity.EntityData, abilitiesState []bool, area component.Area) *ActionPanel {
+func NewActionMenu(s *BattleScene, data *entity.EntityData, abilitiesState []bool, area guihandler.Area) *ActionPanel {
 	p := &ActionPanel{
 		Panel: container.NewPanel(area, guihandler.LoadImage("asset/background/ui/Action_Background.png")),
 		//Data:  data,
 	}
 
-	icon := component.NewImage(guihandler.GetIcon(data.Name, data.EntityType), component.Area{
+	icon := component.NewImage(guihandler.GetIcon(data.Name, data.EntityType), guihandler.Area{
 		X:      area.X + area.Width*0.05,
 		Y:      area.Y + area.Height*0.05,
 		Width:  area.Width * 0.10,
@@ -37,7 +37,7 @@ func NewActionMenu(s *BattleScene, data *entity.EntityData, abilitiesState []boo
 
 	hBar := component.NewProgressBar(component.HealthBar, data, component.BorderOptions{},
 		//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Height * 0.0015},
-		component.Area{
+		guihandler.Area{
 			X:      area.X + area.Width*0.20,
 			Y:      area.Y + area.Height*0.1,
 			Width:  area.Width * 0.60,
@@ -45,8 +45,8 @@ func NewActionMenu(s *BattleScene, data *entity.EntityData, abilitiesState []boo
 		},
 	)
 	hLabel := component.NewLabel(fmt.Sprintf("%v/%v Hp", int(data.Stats[stat.Hp]), int(data.MaxHp)),
-		color.White, component.VerySmallSize, component.NoneSpace,
-		text.AlignStart, text.AlignCenter, component.Area{
+		color.White, guihandler.VerySmallSize, guihandler.NoneSpace,
+		text.AlignStart, text.AlignCenter, guihandler.Area{
 			X:      area.X + area.Width*0.825,
 			Y:      area.Y + area.Height*0.1,
 			Width:  area.Width * 0.10,
@@ -54,7 +54,7 @@ func NewActionMenu(s *BattleScene, data *entity.EntityData, abilitiesState []boo
 		})
 	sBar := component.NewProgressBar(component.StaminaBar, data, component.BorderOptions{},
 		//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Height * 0.0015},
-		component.Area{
+		guihandler.Area{
 			X:      area.X + area.Width*0.20,
 			Y:      area.Y + area.Height*0.17,
 			Width:  area.Width * 0.60,
@@ -62,8 +62,8 @@ func NewActionMenu(s *BattleScene, data *entity.EntityData, abilitiesState []boo
 		},
 	)
 	sLabel := component.NewLabel(fmt.Sprintf("%v/%v St", int(data.Stats[stat.St]), int(data.MaxSt)),
-		color.White, component.VerySmallSize, component.NoneSpace,
-		text.AlignStart, text.AlignCenter, component.Area{
+		color.White, guihandler.VerySmallSize, guihandler.NoneSpace,
+		text.AlignStart, text.AlignCenter, guihandler.Area{
 			X:      area.X + area.Width*0.825,
 			Y:      area.Y + area.Height*0.17,
 			Width:  area.Width * 0.10,
@@ -71,7 +71,7 @@ func NewActionMenu(s *BattleScene, data *entity.EntityData, abilitiesState []boo
 		})
 	mBar := component.NewProgressBar(component.ManaBar, data, component.BorderOptions{},
 		//component.BorderOptions{BorderColor: color.White, BorderWidth: area.Height * 0.0015},
-		component.Area{
+		guihandler.Area{
 			X:      area.X + area.Width*0.20,
 			Y:      area.Y + area.Height*0.225,
 			Width:  area.Width * 0.60,
@@ -79,8 +79,8 @@ func NewActionMenu(s *BattleScene, data *entity.EntityData, abilitiesState []boo
 		},
 	)
 	mLabel := component.NewLabel(fmt.Sprintf("%v/%v Mp", int(data.Stats[stat.Mp]), int(data.MaxMp)),
-		color.White, component.VerySmallSize, component.NoneSpace,
-		text.AlignStart, text.AlignCenter, component.Area{
+		color.White, guihandler.VerySmallSize, guihandler.NoneSpace,
+		text.AlignStart, text.AlignCenter, guihandler.Area{
 			X:      area.X + area.Width*0.825,
 			Y:      area.Y + area.Height*0.225,
 			Width:  area.Width * 0.10,
@@ -91,7 +91,7 @@ func NewActionMenu(s *BattleScene, data *entity.EntityData, abilitiesState []boo
 	for i := range len(abilityBtns) {
 		abilityBtns[i] = component.NewButton([4]*ebiten.Image{
 			component.Normal: imgs[i],
-		}, nil, component.Area{
+		}, nil, guihandler.Area{
 			X:      area.X + area.Width*0.09*float64(i) + area.Width*0.05*float64(i+1),
 			Y:      area.Y + area.Height*0.55,
 			Width:  area.Width * 0.09,

@@ -9,6 +9,7 @@ import (
 	"github.com/KONshougun/K-game/model/equipment/armor"
 	"github.com/KONshougun/K-game/model/equipment/weapon"
 	"github.com/KONshougun/K-game/model/stat"
+	"github.com/KONshougun/K-game/model/values"
 )
 
 var EnemyForcedTargets []int
@@ -39,10 +40,10 @@ func (t Opponents) GetEntities() []*entity.EntityData {
 }
 
 func (t Opponents) GetAliveEntities() []*entity.EntityData {
-	team := make([]*entity.EntityData, len(t))
-	for i, e := range t {
+	team := make([]*entity.EntityData, 0, len(t))
+	for _, e := range t {
 		if e.GetEnemy().GetEntity().Stats[stat.Hp] > 0 {
-			team[i] = e.GetEnemy().GetEntity()
+			team = append(team, e.GetEnemy().GetEntity())
 		}
 	}
 	return team
@@ -72,14 +73,14 @@ func NewEnemy(name EnemyName, dropItems []model.Item) *EnemyData {
 func (c *EnemyData) GetEntity() *entity.EntityData {
 	return c.EntityData
 }
-func (EnemyController) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
+func (EnemyController) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]*values.Damage, int) {
 	for i, v := range slices.Backward(e.Abilities) {
 		if _, b := v.IsUsable(e); b {
 			e.Abilities[i].CastAbility(&e.Stats)
 			return e.Abilities[i].Execute(opponents), i
 		}
 	}
-	return map[int][]model.Damage{}, -1
+	return map[int][]*values.Damage{}, -1
 }
 func (EnemyController) GetTarget(opponents []*entity.EntityData, targetCount uint8, differentTargets, randomTargets bool) []int {
 	targets := make([]int, 0, targetCount)
@@ -115,13 +116,13 @@ func (e *EnemyData) GetAbility([]bool) int {
 	return -1
 }
 func (e *EnemyData) SetAbilities(ad entity.AbilityData) {
-	e.Abilities[0] = entity.NewAbility(ad, func(opponents []*entity.EntityData) map[int][]model.Damage {
+	e.Abilities[0] = entity.NewAbility(ad, func(opponents []*entity.EntityData) map[int][]*values.Damage {
 		targets := e.GetTarget(opponents, ad.TargetCount, ad.DifferentTargets, false)
 
-		attacks := make(map[int][]model.Damage, len(targets))
+		attacks := make(map[int][]*values.Damage, len(targets))
 		for _, t := range targets {
 			if !e.HasHit(opponents[t].Stats, float64(ad.Acc)) {
-				attacks[t] = append(attacks[t], model.Damage{DmgType: model.Miss, Amount: 0})
+				attacks[t] = append(attacks[t], values.NewDamage(0, values.Miss, values.Normal, values.Ability))
 				continue
 			}
 

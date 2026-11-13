@@ -5,15 +5,14 @@ import (
 	"math/rand"
 	"slices"
 
-	//"github.com/KONshougun/K-game/game/combat/handler"
 	"github.com/KONshougun/K-game/game/combat/effect"
 	"github.com/KONshougun/K-game/game/combat/event"
 	"github.com/KONshougun/K-game/game/comm"
-	"github.com/KONshougun/K-game/model"
 	"github.com/KONshougun/K-game/model/entity"
 	"github.com/KONshougun/K-game/model/equipment/armor"
 	"github.com/KONshougun/K-game/model/equipment/weapon"
 	"github.com/KONshougun/K-game/model/stat"
+	"github.com/KONshougun/K-game/model/values"
 )
 
 var CharacterForcedTargets []int
@@ -83,9 +82,9 @@ func NewCharacter(name CharacterName, a *armor.Armor, w *weapon.Weapon, wt weapo
 	})
 	c.AddEffect(event.EndTurn, effect.None, effect.Slow, func(evt event.EventData) event.EventData {
 		c.AbilitiesCdReset()
-		c.CurrHp = c.MaxHp/c.Stats[stat.Hp]
-		c.CurrSt = c.MaxSt/c.Stats[stat.St]
-		c.CurrMp = c.MaxMp/c.Stats[stat.Mp]
+		c.CurrHp = c.MaxHp / c.Stats[stat.Hp]
+		c.CurrSt = c.MaxSt / c.Stats[stat.St]
+		c.CurrMp = c.MaxMp / c.Stats[stat.Mp]
 		return evt
 	})
 	c.EntityType = entity.Character
@@ -107,7 +106,7 @@ func NewCharacter(name CharacterName, a *armor.Armor, w *weapon.Weapon, wt weapo
 func (c *CharacterData) GetEntity() *entity.EntityData {
 	return c.EntityData
 }
-func (CharacterController) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]model.Damage, int) {
+func (CharacterController) Attack(e *entity.EntityData, opponents []*entity.EntityData) (map[int][]*values.Damage, int) {
 	var action int
 
 	abilities := e.AvailableAbilities()
@@ -123,7 +122,7 @@ func (CharacterController) Attack(e *entity.EntityData, opponents []*entity.Enti
 			}
 		}
 		if !found {
-			return map[int][]model.Damage{}, -1
+			return map[int][]*values.Damage{}, -1
 		}
 		fmt.Scanln(&action)
 		//Perchè l'utente parte da 1
